@@ -1,0 +1,34 @@
+Package: ISOSCELES
+Title: ISOSCELES
+Version: 0.0.0.9000
+Authors@R: person("Robert", "Suter", email = "rks82@georgetown.edu", role = c("aut", "cre"), comment = c("ORCID" = "0000-0002-3335-8426"))
+Description: Launches the ISOSCELES application in the browser for transcriptomic analysis using user-provided data.
+License: use_proprietary_license()
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.2.3
+Imports: 
+    shiny,
+    Seurat,
+    ggplot2,
+    tibble,
+    cowplot,
+    viridis,
+    dplyr,
+    ggsci,
+    ggrepel,
+    tidyverse,
+    plotly,
+    htmlwidgets,
+    reshape2,
+    Hmisc,
+    corrplot,
+    pheatmap,
+    grid,
+    MAST,
+    shinydashboard,
+    shinythemes,
+    scales,
+    ggforce,
+    EnhancedVolcano,
+    DT
