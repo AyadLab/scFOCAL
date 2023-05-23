@@ -28,6 +28,6 @@
 #' @import shiny
 #' @export
 runISOSCELES <- function() {
-  shiny::runApp()
+  shiny::runApp(appDir = system.file('shiny', package = "ISOSCELES"))
   }
 

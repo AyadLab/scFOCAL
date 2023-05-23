@@ -29,7 +29,7 @@ options(shiny.maxRequestSize = 30000*1024^2) # increase limit to 15gb?
 #
 ################################################################################
 
-# # LINCS Response Signature Data
+# LINCS Response Signature Data
 LINCS.ResponseSigs <- read.delim(
   file = "matPH3_2_1_0.2_0.3_L1000_Batch2017_Regina_removed.txt", header = T)
 row.names(LINCS.ResponseSigs) <- LINCS.ResponseSigs$Genes
@@ -60,7 +60,7 @@ ui <- fluidPage(
       -webkit-box-shadow: inset 0 1px 1px rgba(0,0,0,.05);
       box-shadow: inset 0 1px 1px rgba(0,0,0,.05);
       font-family: 'sans-serif', Arial Rounded MT Bold;
-  
+
   }
 
                             "))),
@@ -72,12 +72,12 @@ ui <- fluidPage(
                  tags$style(type = "text/css", "li a{color:#000000;}")
                ), img(src = "scSynergySeq Diagram (2).png", width = 500, height = 500)
                ),
-               
+
                tabPanel(tags$div(
                  tags$i(class="fa-sharp fa-solid fa-magnifying-glass-chart"),
                  tags$span("- Run ISOSCELES")
                ), #put contents for actual application here
-               
+
                tabsetPanel(
                  tabPanel(tags$div(
                    tags$i(class = "fa-sharp fa-solid fa-upload"),
@@ -109,19 +109,19 @@ ui <- fluidPage(
                    tags$span("2. Pre-processing"),
                    tags$style(type = "text/css", "li a{color:#000000; font-samily: 'sans-serif', Arial Rounded MT Bold;}")
                  ),
-                 
-                 conditionalPanel(condition = "output.seuratNotLoaded", 
+
+                 conditionalPanel(condition = "output.seuratNotLoaded",
                                   wellPanel(
                                     h4("No data detected."),
                                     # hr(),
-                                    br(), 
+                                    br(),
                                     p("Please first upload a seurat object as an .RDS file"),
-                                    hr(), 
+                                    hr(),
                                     br(),
                                     p(em("Due to the size of some datasets, please allow a few minutes after upload completes for the file to be loaded into the working environment"))
                                   )
                  ),
-                 
+
                  conditionalPanel(condition = "output.seuratLoaded",
                                   splitLayout(
                                     wellPanel(
@@ -151,39 +151,39 @@ ui <- fluidPage(
                                       # p(strong("Diseased Cells")),
                                       plotOutput(outputId = "diseasedHighlight")
                                     )
-                                    
+
                                   )
                  )
-                 
+
                  ),
                  tabPanel(tags$div(
                    tags$i(class = "fa-solid fa-signature"),
                    tags$span("3. Disease Signatures"),
                    tags$style(type = "text/css", "li a{color:#000000; font-samily: 'sans-serif', Arial Rounded MT Bold;}")
                  ),
-                 conditionalPanel(condition = "output.seuratNotLoaded", 
+                 conditionalPanel(condition = "output.seuratNotLoaded",
                                   wellPanel(
                                     h4("No data detected."),
-                                    br(), 
+                                    br(),
                                     p("Please first upload a seurat object as an .RDS file"),
-                                    hr(), 
+                                    hr(),
                                     br(),
                                     p(em("Due to the size of some datasets, please allow a few minutes after upload completes for the file to be loaded into the working environment"))
                                   ),
                  ),
                  conditionalPanel(condition = "output.seuratLoaded",
-                                  
+
                                   wellPanel(
                                     img(src = "SlicedDiseaseSignatureCalc.png", width = 650, height = 220),
                                   ),
-                                  
+
                                   conditionalPanel(condition = "output.controlsNotSelected",
                                                    h4("No test cell populations selected"),
                                                    br(),
                                                    p(strong("Please return to the pre-processing tab to select test cell populations")),
                                                    hr()
                                   ),
-                                  
+
                                   conditionalPanel(condition = "output.controlsSelected",
                                                    wellPanel(
                                                      sliderInput(inputId = "cellSubsetMax_1",
@@ -197,28 +197,34 @@ ui <- fluidPage(
                                                                   label = "Calculate Disease Signatures",
                                                                   icon = icon("sync"))
                                                    )
-                                                   
+
                                   ),
-                                  
-                                  
+
+
                                   conditionalPanel(condition = "input.CalcDiseaseSig >= 1", # Change this condition to detect completion of diffexp testing
                                                    tabsetPanel(
-                                                     
+
                                                      tabPanel(title = "Heatmap",
-                                                              
+
                                                               wellPanel(
                                                                 plotOutput(outputId = "diseaseSigRDS"),
                                                                 downloadButton("diseaseSigDownload", label = "Download signature .csv"),
                                                                 downloadButton("diseaseSigHeatmapDownload", label = "Download Plot .pdf")
-                                                              )
-                                                              
+                                                              )#,
+                                                              # wellPanel(tableOutput(outputId = "diseaseSigTable"))
+
                                                      ),
-                                                     
+
+                                                     tabPanel(title = "Table",
+                                                              wellPanel(DT::dataTableOutput(outputId = "diseaseSigTable")
+                                                              )
+                                                     ),
+
                                                      tabPanel(title = "Compare",
                                                               "Correlation Matrix Viz Here"),
-                                                     
+
                                                      tabPanel(title = "Reversal",
-                                                              
+
                                                               "Reversal here...",
                                                               wellPanel(
                                                                 radioButtons(inputId = "whichDiseaseSignatures",
@@ -290,29 +296,29 @@ ui <- fluidPage(
                                                                                  ),
                                                                                  downloadButton(outputId = "reversedSlicedDiseaseSigDL", label = "Download reversal score matrix")
                                                                 )
-                                                                
+
                                                                 # If disease signatures haven't been calculated yet, need alternative.
                                                               )
-                                                              
+
                                                      )
                                                    ))
-                                  
+
                  )
-                 
-                 ), 
+
+                 ),
                  tabPanel(tags$div(
                    tags$i(class = "fa-sharp fa-solid fa-pills"),
                    tags$span("4. In Silico Perturbation"),
                    tags$style(type = "text/css", "li a{color:#000000; font-samily: 'sans-serif', Arial Rounded MT Bold;}")
                  ),
-                 
-                 conditionalPanel(condition = "output.seuratNotLoaded", 
+
+                 conditionalPanel(condition = "output.seuratNotLoaded",
                                   wellPanel(
                                     h4("No data detected."),
                                     # hr(),
-                                    br(), 
+                                    br(),
                                     p("Please first upload a seurat object as an .RDS file"),
-                                    hr(), 
+                                    hr(),
                                     br(),
                                     p(em("Due to the size of some datasets, please allow a few minutes after upload completes for the file to be loaded into the working environment"))
                                   )
@@ -324,7 +330,7 @@ ui <- fluidPage(
                                                    p(strong("Please return to the pre-processing tab to select test cell populations")),
                                                    hr()
                                   ),
-                                  
+
                                   conditionalPanel(condition = "output.controlsSelected",
                                                    wellPanel(
                                                      h4("Step 1: Calculate L1000 small molecule vs single-cell correlations"),
@@ -334,7 +340,7 @@ ui <- fluidPage(
                                                          conditionalPanel(condition = "output.uploadCorrelationMatrix",
                                                                           hr(),
                                                                           uiOutput("L1000_release_InSilico"),
-                                                                          actionButton(inputId = "CalculateRDS_L1000_Spearman_Mat", label = "Calculate single-cell compound discordance")  
+                                                                          actionButton(inputId = "CalculateRDS_L1000_Spearman_Mat", label = "Calculate single-cell compound discordance")
                                                          ),
                                                          checkboxInput(inputId = "uploadCorrelationMatrix", label = "Alternatively, upload precalculated correlation file", ),
                                                          conditionalPanel(condition = "input.uploadCorrelationMatrix",
@@ -364,9 +370,9 @@ ui <- fluidPage(
                                                      # br(),
                                                      hr(),
                                                      conditionalPanel(condition = "output.corrMatrixCalculated || output.corrMatUploaded",
-                                                                      h4("Step 2: Select reference compound and set parameters."), 
+                                                                      h4("Step 2: Select reference compound and set parameters."),
                                                                       br(),
-                                                                      
+
                                                                       wellPanel(
                                                                         splitLayout(
                                                                           wellPanel(
@@ -384,11 +390,11 @@ ui <- fluidPage(
                                                                             sliderInput(inputId = "sigMaxCutoffRDS",
                                                                                         label = "Set visualization cutoff maximum:",
                                                                                         value = 0, min = -1, max = 1, step = 0.1),
-                                                                            sliderInput(inputId = "correlationCutoff_RDS", "correlationCutoff_RDS", 
+                                                                            sliderInput(inputId = "correlationCutoff_RDS", "correlationCutoff_RDS",
                                                                                         label = "Set sensitivity and resistance cut-offs [adjustable pseudodose]",
                                                                                         value = c(0, 0), min = -1, max = 1, step = 0.05)
                                                                             # )
-                                                                          ), 
+                                                                          ),
                                                                           plotOutput(outputId = "refSignatureUMAPRDS")
                                                                         )
                                                                       ),
@@ -407,7 +413,7 @@ ui <- fluidPage(
                                                                                          h4("Success! Please navigate to the results tab."),
                                                                                          hr())
                                                                       )
-                                                                      
+
                                                      )
                                                      # textOutput('finalMatrixText')
                                                      # sliderInput(inputId = "cellSubsetMax_1",
@@ -415,9 +421,9 @@ ui <- fluidPage(
                                                      #             min = 100, max = 40000, step = 100, value = 500
                                                      # )
                                                    )
-                                                   
+
                                   )
-                                  
+
                  )
                  ),
                  tabPanel(tags$div(
@@ -426,13 +432,13 @@ ui <- fluidPage(
                    tags$style(type = "text/css", "li a{color:#000000; font-samily: 'sans-serif', Arial Rounded MT Bold;}")
                  ),
                  # results section here
-                 conditionalPanel(condition = "output.seuratNotLoaded", 
+                 conditionalPanel(condition = "output.seuratNotLoaded",
                                   wellPanel(
                                     h4("No data detected."),
                                     # hr(),
-                                    br(), 
+                                    br(),
                                     p("Please first upload a seurat object as an .RDS file"),
-                                    hr(), 
+                                    hr(),
                                     br(),
                                     p(em("Due to the size of some datasets, please allow a few minutes after upload completes for the file to be loaded into the working environment"))
                                   )
@@ -467,7 +473,7 @@ ui <- fluidPage(
                                                                                                       hr(),
                                                                                                       downloadButton(outputId = "resVsSensDEGSdownload", label = "Download differential expression results")
                                                                                      )
-                                                                                     
+
                                                                                    ),
                                                                                    wellPanel(
                                                                                      plotOutput(outputId = "resVsSensVolcano")
@@ -476,7 +482,7 @@ ui <- fluidPage(
                                                                                  DT::dataTableOutput(outputId = "resVsSensTable")
                                                                                )
                                                                       ),
-                                                                      tabPanel("Pharmacotranscriptomics", 
+                                                                      tabPanel("Pharmacotranscriptomics",
                                                                                wellPanel(
                                                                                  splitLayout(
                                                                                    wellPanel(
@@ -512,7 +518,7 @@ ui <- fluidPage(
                  )
                )
                ),
-               
+
                tabPanel(tags$div(
                  tags$i(class="fa-sharp fa-solid fa-question"),
                  tags$span("- Tutorials")
@@ -522,8 +528,8 @@ ui <- fluidPage(
                br(),
                p(strong("Welcome to ISOSCELES! This tutorial will walk you through the ISOSCELES workflow.")),
                h2(strong("Data Upload")),
-               p("Upload data as a Seurat object that contains expression data from RNAseq. File format should be .RDS or .rds. Please wait for a success message before moving to Step 2. 
-                 This may take a few minutes." 
+               p("Upload data as a Seurat object that contains expression data from RNAseq. File format should be .RDS or .rds. Please wait for a success message before moving to Step 2.
+                 This may take a few minutes."
                ),
                h2(strong("Data Pre-Processing")),
                p("Select cell population paramaters for further study. Identify which cell population(s) you would like to set as controls and which cell population(s) you would like
@@ -545,21 +551,21 @@ ui <- fluidPage(
                 select computational parameters."),
                p("Click on 'Run Perturbation Analysis'. You will receive a Success message when analysis is complete, at which point you can navigate to the Results tab to study the analysis."),
                ),
-               
+
                # tabPanel(tags$div(
                #   tags$i(class="fa-sharp fa-solid fa-question"),
                #   tags$span("- FAQ")
                # ), #put contents for FAQ here
                # ),
-               
+
                tabPanel(tags$div(
                  tags$i(class = "fa-brands fa-github"),
                  tags$span("- Install R Package")
-               ), # put contents for R package installation here 
+               ), # put contents for R package installation here
                h1("License Agreement"),
                hr(),
                br(), # Note this is a draft... I dont know if this is right. Not a lawyer!
-               p(strong("1. The Board of Trustees of the Georgetown University (“Georgetown”) provides ISOSCELES software and code (“Service”) free of charge for non-commercial use only. Use of the Service by any commercial entity for any purpose, including research, is prohibited.")), 
+               p(strong("1. The Board of Trustees of the Georgetown University (“Georgetown”) provides ISOSCELES software and code (“Service”) free of charge for non-commercial use only. Use of the Service by any commercial entity for any purpose, including research, is prohibited.")),
                p(strong("2. By using the Service, you agree to be bound by the terms of this Agreement. Please read it carefully.")),
                p(strong("3. You agree not to use the Service for commercial advantage, or in the course of for-profit activities. You agree not to use the Service on behalf of any organization that is not a non-profit organization. Commercial entities wishing to use this Service should contact Georgetown University’s Office of Technology Licensing.")),
                p(strong("4. THE SERVICE IS OFFERED “AS IS”, AND, TO THE EXTENT PERMITTED BY LAW, GEORGETOWN MAKES NO REPRESENTATIONS AND EXTENDS NO WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED. GEORGETOWN SHALL NOT BE LIABLE FOR ANY CLAIMS OR DAMAGES WITH RESPECT TO ANY LOSS OR OTHER CLAIM BY YOU OR ANY THIRD PARTY ON ACCOUNT OF, OR ARISING FROM THE USE OF THE SERVICE. YOU HEREBY AGREE TO DEFEND AND INDEMNIFY GEORGETOWN, ITS TRUSTEES, EMPLOYEES, OFFICERS, STUDENTS, AGENTS, FACULTY, REPRESENTATIVES, AND VOLUNTEERS (“GEORGETOWN INDEMNITEES”) FROM ANY LOSS OR CLAIM ASSERTED AGAINST GEORGETOWN INDEMNITEES ARISING FROM YOUR USE OF THE SERVICE.")),
@@ -577,12 +583,12 @@ ui <- fluidPage(
                                 p(code("devtools::install_github('AyadLab/ISOSCELES')"))
                )
                ),
-               
+
                tabPanel(tags$div(
                  tags$i(class="fa-sharp fa-solid fa-info"),
                  tags$span("- Resources")
                ), #put contents for FAQ here
-               
+
                wellPanel(
                  h3("Other Resources from our laboratories:"),
                  hr(),
@@ -597,17 +603,17 @@ ui <- fluidPage(
                  # splitLayout(h4("Read the publication here: "),
                  a(href= "https://www.nature.com/articles/s41467-018-07659-z", "Nature Communications 9, 5315")
                )
-               #   
+               #
                # )
-               
+
                ),
-               
+
                tabPanel(tags$div(
                  tags$i(class="fa-sharp fa-solid fa-download"),
                  tags$span("- Downloads")
                ), #put contents for FAQ here
                ),
-               
+
                tabPanel(tags$div(
                  tags$i(class="fa-sharp fa-solid fa-envelope"),
                  tags$span("- Contact")
@@ -615,7 +621,7 @@ ui <- fluidPage(
                splitLayout(
                  wellPanel(
                    # hr(),
-                   br(), 
+                   br(),
                    p(strong("Robert K. Suter, PhD")),
                    p(em("Bioinformatician")),
                    hr(),
