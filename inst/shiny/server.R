@@ -896,6 +896,7 @@ server <- function(input, output) {
 
 
   # connec this to the download button
+  # How do we fix this so that the download is always .csv and not lag making .html...?
   output$RDScorrMatDownload <- downloadHandler(
     filename = function() {
       paste("RDS_upload_L1000_consensus_corrmat.csv", sep = "")
