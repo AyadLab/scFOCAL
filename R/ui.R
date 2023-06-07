@@ -562,8 +562,12 @@ ui <- fluidPage(
                  tags$i(class = "fa-brands fa-github"),
                  tags$span("- Install R Package")
                ), # put contents for R package installation here
-               h1("License Agreement"),
+               h1("ISOSCELES R Package"),
                hr(),
+               br(),
+               p(strong("Due to the likely large size of many single-cell RNA seq datasets, the ISOSCELES shiny app is locally deployable via the ISOSCELES R Package. Please read the license agreement below and agree to access install instructions.")),
+               h1("License Agreement"),
+               # hr(),
                br(), # Note this is a draft... I dont know if this is right. Not a lawyer!
                p(strong("1. The Board of Trustees of the Georgetown University (“Georgetown”) provides ISOSCELES software and code (“Service”) free of charge for non-commercial use only. Use of the Service by any commercial entity for any purpose, including research, is prohibited.")),
                p(strong("2. By using the Service, you agree to be bound by the terms of this Agreement. Please read it carefully.")),
@@ -572,15 +576,23 @@ ui <- fluidPage(
                p(strong("5. All rights not expressly granted to you in this Agreement are reserved and retained by GEORGETOWN or its licensors or content providers. This Agreement provides no license under any patent.")),
                p(strong("6. You agree that this Agreement and any dispute arising under it is governed by the laws of the District of Columbia, United States of America, applicable to agreements negotiated, executed, and performed within the DISTRICT OF COLUMBIA")),
                p(strong("7. Subject to your compliance with the terms and conditions set forth in this Agreement, GEORGETOWN grants you a revocable, non-exclusive, non-transferable right to access and make use of the Service.")),
-               hr(),
+               # hr(),
                br(),
                p(em("Do you accept the terms and conditions in this agreement?")),
                fluidRow(column(width = 4, actionButton(inputId = "acceptAgreement", label = "Accept")), column(width = 4, actionButton(inputId = "rejectAgreement", label = "Reject and close"))),
-               hr(),
+               conditionalPanel(condition = "input.acceptAgreement",
+                                "Please scroll down for instructions."),
+               # hr(),
                br(),
                conditionalPanel(condition = "input.acceptAgreement",
-                                "accepted",
-                                p(code("devtools::install_github('AyadLab/ISOSCELES')"))
+                                p(strong("Thank You!")),
+                                h2("How to install the ISOSCELES R package"),
+                                p(strong("The ISOSCELES R Package can be installed from github using devtools.")),
+                                p(code("devtools::install_github('AyadLab/ISOSCELES')")),
+                                p(strong("Once installed, load the ISOSCELES library.")),
+                                p(code("library(ISOSCELES)")),
+                                p(strong("Launch the ISOSCELES shiny UI using the RunISOSCELES() function.")),
+                                p(code("ISOSCELES::runISOSCELES()"))
                )
                ),
 
