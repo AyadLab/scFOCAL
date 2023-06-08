@@ -208,7 +208,7 @@ BiocManager::install()
 ## Usage
 
 Follow this brief tutorial to familiarize yourself with the application. 
------
+
 ### Launch the ISOSCELES application
 
 Once installed, launching ISOSCELES is as easy as the following: 
