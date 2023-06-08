@@ -250,6 +250,7 @@ Distributed under the MIT License. See `LICENSE.txt` for more information.
 ## Contact
 
 Robert K. Suter, PhD - [@biovibin](https://twitter.com/biovibin) - rks82@georgetown.edu
+<br />
 Nagi G. Ayad, PhD - [@nagi_ayad](https://twitter.com/nagi_ayad) - na853@georgetown.edu
 
 Project Link: [https://github.com/AyadLab/ISOSCELES](https://github.com/AyadLab/ISOSCELES)
