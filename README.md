@@ -275,4 +275,5 @@ Project Link: [https://github.com/AyadLab/ISOSCELES](https://github.com/AyadLab/
 [Bootstrap-url]: https://getbootstrap.com
 [JQuery.com]: https://img.shields.io/badge/jQuery-0769AD?style=for-the-badge&logo=jquery&logoColor=white
 [JQuery-url]: https://jquery.com 
+[Shinyapps.io]: https://shiny.posit.co/images/shiny-solo.png
 [Shiny-url]: https://shinyapps.io
