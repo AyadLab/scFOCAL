@@ -244,9 +244,9 @@ Analysis with ISOSCELES requires identification of tumor cell subpopulations, an
 
 <br />
 Here, you may select the dimensionality reduction to use to visualize your data throughout the app (i.e. umap, pca, any custom reduction, etc.). 
-
+<br />
 You will also select the relevant metadata column to group your cells by. Once selected, you will be able to select the individual identities within those annotations identifying transformed tumor cells (for GBM, we chose to group by GBM cell transcriptional state (Neftel et al., 2019) and your control populations (non-tumor cell types). Your selections will be visualized by coloring selected cells by whether they are grouped as control cells or diseased cells.  
-
+<hr />
 ### Step 3. - Single-Cell RNAseq Derived Disease Signatures
 
 
