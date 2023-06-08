@@ -88,9 +88,7 @@
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-<p align="center"> Built With </p>
-<h4 align="center">Built With </h4>
-
+<h4 align="left">Built With </h4>
 
 * [![R][r-project.org]][R-url]
 * [![Shiny][Shinyapps.io]][Shiny-url]
