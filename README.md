@@ -131,7 +131,7 @@ ISOSCELES operates through the integration of drug-response transcriptional cons
 
 ### Prerequisites
 
-The ISOSCELES R package can be installed with devtools...
+The ISOSCELES R package  for R > 4.3.0 can be installed with devtools...
 
 Installation of devtools in R:
 
