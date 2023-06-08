@@ -45,8 +45,6 @@
     <a href="https://github.com/AyadLab/ISOSCELES"><strong>Explore the docs »</strong></a>
     <br />
     <br />
-    <a href="https://github.com/AyadLab/ISOSCELES">View Demo</a>
-    ·
     <a href="https://github.com/AyadLab/ISOSCELES/issues">Report Bug</a>
     ·
     <a href="https://github.com/AyadLab/ISOSCELES/issues">Request Feature</a>
