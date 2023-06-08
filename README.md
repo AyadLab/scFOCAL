@@ -114,7 +114,7 @@ ISOSCELES operates through the integration of drug-response transcriptional cons
 
 
 <!-- GETTING STARTED -->
-## Getting Started
+<!-- ## Getting Started --> 
 
 ###### ISOSCELES is available via shinyapps.io, or as a standalone R package. 
 
