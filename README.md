@@ -34,9 +34,6 @@
   <a href="https://github.com/AyadLab/ISOSCELES">
     <img src="images/ISOSCELES.png" alt="Logo" width="600" height="93">
   </a>
-  <a href="https://github.com/AyadLab/ISOSCELES">
-    <img src="images/ISOSCELES.png" alt="Logo" width="600" height="93">
-  </a>
 
 <h3 align="center">ISOSCELES</h3>
 
@@ -96,6 +93,9 @@
 <div align="center">
   <a href="https://r-project.org">
     <img src="https://www.r-project.org/Rlogo.png" alt="R" width="30" height="30">
+  </a>
+  <a href="https://shiny.posit.co">
+    <img src="https://shiny.posit.co/images/shiny-solo.png" alt="R" width="30" height="30">
   </a>
   
 * [![R][r-project.org]][R-url]
