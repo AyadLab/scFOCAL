@@ -98,7 +98,7 @@
 
 <style> 
   .div-1 {
-    background-color: #ffffff;
+    background-color: #EBEBEB;
   }
 </style>
 
@@ -106,7 +106,7 @@
   <a href="https://shiny.posit.co">
     <img src="https://shiny.posit.co/images/shiny-solo.png" alt="R" width="30" height="30">
   </a>
-<div>
+</div>
 
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
