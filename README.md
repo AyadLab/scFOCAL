@@ -32,7 +32,7 @@
 <br />
 <div align="center">
   <a href="https://github.com/AyadLab/ISOSCELES">
-    <img src="images/ISOSCELES.png" alt="Logo" width="300" height="80">
+    <img src="images/ISOSCELES.png" alt="Logo" width="600" height="93">
   </a>
 
 <h3 align="center">ISOSCELES</h3>
