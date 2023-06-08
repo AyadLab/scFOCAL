@@ -88,6 +88,7 @@ ISOSCELES operates through the integration of drug-response transcriptional cons
   <a href="https://github.com/AyadLab/ISOSCELES">
     <img src="images/graphicalAbstract.png" alt="abstract" width="600" height="646">
   </a>
+</div>
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -115,7 +116,8 @@ ISOSCELES operates through the integration of drug-response transcriptional cons
 ISOSCELES is available via shinyapps.io, or as a standalone R package, which launches the ISOSCELES shiny app locally. 
 
 Find the app on shinyapps.io here:
-  <p>(<a href="https://robert-k-suter.shinyapps.io/isosceles/">here</a>)</p>
+  
+<p>(<a href="https://robert-k-suter.shinyapps.io/isosceles/">here</a>)</p>
   
   
   
