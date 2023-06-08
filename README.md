@@ -84,6 +84,8 @@
 <!-- ABOUT THE PROJECT -->
 ## About ISOSCELES
 
+ISOSCELES operates through the integration of drug-response transcriptional consensus signatures (TCSs) derived from the LINCS L1000 dataset with multi-subject single-cell RNA sequencing data, and facilitates analysis of drug and cell discordance from multiple perspectives.
+
 [![Product Name Screen Shot][product-screenshot]](https://example.com)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
