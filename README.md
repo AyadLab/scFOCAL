@@ -172,7 +172,7 @@ library(DT)
 ##### Using devtools, the ISOSCELES R package can be installed from the source file. 
 
 <p align="left">
-  <a href="https://drive.google.com/file/d/1geEhIXKRkSBII37V4TMo5bl2AzcUJ3zN/view?usp=drive_link"><strong>Download the ISOSCELES source file here! »</strong></a>
+  <a href="https://drive.google.com/u/0/uc?id=1geEhIXKRkSBII37V4TMo5bl2AzcUJ3zN&export=download"><strong>Download the ISOSCELES source file here! »</strong></a>
 </p>
 
 1. Get a free API Key at [https://example.com](https://example.com)
