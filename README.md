@@ -89,14 +89,24 @@
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <h4 align="left">Built With </h4>
+
 <div align="left">
   <a href="https://r-project.org">
     <img src="https://www.r-project.org/Rlogo.png" alt="R" width="30" height="30">
   </a>
-<div align="left", background-color: #ffffff>
+</div>
+
+<style> 
+  .div-1 {
+    background-color: #ffffff;
+  }
+</style>
+
+<div class="div-1">
   <a href="https://shiny.posit.co">
     <img src="https://shiny.posit.co/images/shiny-solo.png" alt="R" width="30" height="30">
   </a>
+<div>
 
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
