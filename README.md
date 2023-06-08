@@ -114,6 +114,35 @@ ISOSCELES is available via shinyapps.io, or as a standalone R package, which lau
 
 ### Prerequisites
 
+ISOSCELES requires the following additional R packages:
+
+```{r}
+library(shiny)
+library(Seurat)
+library(ggplot2)
+library(tibble)
+library(cowplot)
+library(viridis)
+library(dplyr)
+library(ggsci)
+library(ggrepel)
+library(tidyverse)
+library(plotly)
+library(htmlwidgets)
+library(reshape2)
+library(Hmisc)
+library(corrplot)
+library(pheatmap)
+library(grid)
+library(MAST)
+library(shinydashboard)
+library(shinythemes)
+library(scales)
+library(ggforce)
+library(EnhancedVolcano)
+library(DT)
+```
+
 This is an example of how to list things you need to use the software and how to install them.
 * npm
   ```sh
