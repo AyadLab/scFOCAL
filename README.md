@@ -93,8 +93,8 @@ ISOSCELES operates through the integration of drug-response transcriptional cons
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 
-<div align="left">
-  <h4 align="left">Built With: </h4>
+<div align="center">
+  Built with: 
   <a href="https://r-project.org">
     <img src="https://www.r-project.org/Rlogo.png" alt="R" width="25" height="25">
   </a>
