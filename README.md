@@ -121,6 +121,19 @@ ISOSCELES is available via shinyapps.io, or as a standalone R package, which lau
 
 ### Prerequisites
 
+The ISOSCELES R package can be installed with devtools...
+
+Installation of devtools in R:
+
+```{r}
+# Install devtools from CRAN
+install.packages("devtools")
+
+# Or the development version from GitHub:
+# install.packages("devtools")
+devtools::install_github("r-lib/devtools")
+```
+
 ISOSCELES requires the following additional R packages:
 
 ```{r}
