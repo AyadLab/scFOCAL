@@ -1,4 +1,3 @@
-# ISOSCELES
 
 <!-- Improved compatibility of back to top link: See: https://github.com/othneildrew/Best-README-Template/pull/73 -->
 <a name="readme-top"></a>
@@ -33,10 +32,10 @@
 <br />
 <div align="center">
   <a href="https://github.com/AyadLab/ISOSCELES">
-    <img src="images/ISOSCELES.png" alt="Logo" width="80" height="80">
+    <img src="images/ISOSCELES.png" alt="Logo" width="300" height="80">
   </a>
 
-<h3 align="center">project_title</h3>
+<h3 align="center">ISOSCELES</h3>
 
   <p align="center">
     project_description
