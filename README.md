@@ -270,5 +270,5 @@ Project Link: [https://github.com/AyadLab/ISOSCELES](https://github.com/AyadLab/
 [JQuery-url]: https://jquery.com 
 [Shinyapps.io]: https://shiny.posit.co/images/shiny-solo.png
 [Shiny-url]: https://shinyapps.io
-[r-project.org]: https://r-project.org](https://www.r-project.org/Rlogo.png
+[r-project.org]: https://www.r-project.org/Rlogo.png
 [R-url]: https://r-project.org
