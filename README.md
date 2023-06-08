@@ -227,6 +227,12 @@ Robert K. Suter, PhD - [@biovibin](https://twitter.com/biovibin) - rks82@georget
 
 Project Link: [https://github.com/AyadLab/ISOSCELES](https://github.com/AyadLab/ISOSCELES)
 
+<div align="center">
+  <a href="https://sites.google.com/georgetown.edu/ayadlab/">
+    <img src="https://lh3.googleusercontent.com/ePm-wvuymCcGKZebAGIZpCS16Luv6T5pIAwbS1qKZxNk5REythtRQ1rohESoUSWTTX-JcksPC-E4Ot8g882tI1U=w16383" alt="Ayad Laboratory" width="50" height="50">
+  </a>
+</div>
+
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 
