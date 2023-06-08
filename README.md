@@ -124,8 +124,6 @@ ISOSCELES operates through the integration of drug-response transcriptional cons
 
 ###### Due to the inherent large size of scRNAseq datasets, we highly recommend installing the ISOSCELES R package to run the application locally. 
 
-<br />       
-
 ## The ISOSCELES R Package
 
 ### Prerequisites
