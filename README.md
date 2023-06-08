@@ -94,14 +94,7 @@ Here's a blank template to get started: To avoid retyping too much info. Do a se
 
 ### Built With
 
-* [![Next][Next.js]][Next-url]
-* [![React][React.js]][React-url]
-* [![Vue][Vue.js]][Vue-url]
-* [![Angular][Angular.io]][Angular-url]
-* [![Svelte][Svelte.dev]][Svelte-url]
-* [![Laravel][Laravel.com]][Laravel-url]
-* [![Bootstrap][Bootstrap.com]][Bootstrap-url]
-* [![JQuery][JQuery.com]][JQuery-url]
+* [![R][r-project.org]][R-url]
 * [![Shiny][Shinyapps.io]][Shiny-url]
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
@@ -277,3 +270,5 @@ Project Link: [https://github.com/AyadLab/ISOSCELES](https://github.com/AyadLab/
 [JQuery-url]: https://jquery.com 
 [Shinyapps.io]: https://shiny.posit.co/images/shiny-solo.png
 [Shiny-url]: https://shinyapps.io
+[r-project.org]: https://r-project.org](https://www.r-project.org/Rlogo.png
+[R-url]: https://r-project.org
