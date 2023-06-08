@@ -89,17 +89,15 @@
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <h4 align="left">Built With </h4>
-
-<div align="center">
+<div align="left">
   <a href="https://r-project.org">
     <img src="https://www.r-project.org/Rlogo.png" alt="R" width="30" height="30">
   </a>
+<div align="left">
   <a href="https://shiny.posit.co">
     <img src="https://shiny.posit.co/images/shiny-solo.png" alt="R" width="30" height="30">
   </a>
-  
-* [![R][r-project.org]][R-url]
-* [![Shiny][Shinyapps.io]][Shiny-url]
+
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
