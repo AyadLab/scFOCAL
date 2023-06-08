@@ -34,7 +34,7 @@
   <a href="https://github.com/AyadLab/ISOSCELES">
     <img src="images/ISOSCELES.png" alt="Logo" width="600" height="93">
   </a>
-
+<br /> 
   <p align="center">
     <strong>(I)nferred Drug (S)ensitivity (O)perating on the integration of (S)ingle-(C)ell (E)xpression and (L)1000 (E)xpression (S)ignatures</strong>
     <br />
