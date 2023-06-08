@@ -92,6 +92,8 @@ ISOSCELES operates through the integration of drug-response transcriptional cons
 
 <!-- <p align="right">(<a href="#readme-top">back to top</a>)</p> --> 
 
+<br /> 
+
 <!-- BUILT WITH! --> 
 <div align="center">
   Built using 
