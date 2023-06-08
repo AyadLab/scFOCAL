@@ -93,7 +93,7 @@
   <a href="https://r-project.org">
     <img src="https://www.r-project.org/Rlogo.png" alt="R" width="30" height="30">
   </a>
-<div align="left">
+<div align="left", background-color: #ffffff>
   <a href="https://shiny.posit.co">
     <img src="https://shiny.posit.co/images/shiny-solo.png" alt="R" width="30" height="30">
   </a>
