@@ -247,6 +247,26 @@ You will also select the relevant metadata column to group your cells by. Once s
 -----
 ### Step 3. - Single-Cell RNAseq Derived Disease Signatures
 
+Based on your test (transformed / diseased) and control cell populations selected during pre-processing, you can now generate cell-state (or type) specific disease signatures. 
+<br /> 
+A slider allows you to sub-sample cells within each identity in order to speed up processing. 
+<br />
+Once completed, a heatmap will be generated to visualize the expression of top disease signature genes across all cells in your dataset. 
+<br />
+You can now navigate to the 'Compare' and 'Reversal' tabs to analyze and visualize disease signature correlations across tumor cell identities, and to score small molecules from the L1000 dataset for the reversal of these respective disease signatures. Disease signature and reversal score output can be downloaded as .csv files. 
+<br />
+
+<div align="center">
+  <a href="https://github.com/AyadLab/ISOSCELES">
+    <img src="images/03_diseaseSignatures.png" alt="disease signature generation" width="600" height="256">
+  </a>
+</div>
+
+-----
+### Step 4. - In Silico Perturbation (Drug-Cell Connectivity Analysis
+
+
+
 
 _For more examples, please refer to the [Documentation](https://example.com)_
 
