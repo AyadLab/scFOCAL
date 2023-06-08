@@ -119,6 +119,8 @@ ISOSCELES is available via shinyapps.io, or as a standalone R package, which lau
   <a href="https://robert-k-suter.shinyapps.io/isosceles/"><strong>Find ISOSCELES on shinyapps.io here! »</strong></a>
 </p>
 
+Due to the inherent large size of scRNAseq datasets, we highly reccomend installing the ISOSCELES R package to run the application locally. 
+
 ### Prerequisites
 
 The ISOSCELES R package can be installed with devtools...
