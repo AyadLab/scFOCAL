@@ -195,7 +195,7 @@ Distributed under the MIT License. See `LICENSE.txt` for more information.
 <!-- CONTACT -->
 ## Contact
 
-Your Name - [@biovibin](https://twitter.com/biovibin) - email@email_client.com
+Robert K. Suter, PhD - [@biovibin](https://twitter.com/biovibin) - rks82@georgetown.edu
 
 Project Link: [https://github.com/AyadLab/ISOSCELES](https://github.com/AyadLab/ISOSCELES)
 
