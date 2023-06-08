@@ -172,6 +172,21 @@ library(ggforce)
 library(EnhancedVolcano)
 library(DT)
 ```
+Some of these dependencies will need to be installed via Bioconductor...
+
+Installation of BiocManager:
+
+```{r}
+if (!require("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+BiocManager::install(version = "3.17")
+```
+and to install core bioconductor packages:
+```{r}
+BiocManager::install()
+```
+
+
 ### Installation
 
 ##### Using devtools, the ISOSCELES R package can be installed from the source file. 
