@@ -94,9 +94,12 @@
   <a href="https://r-project.org">
     <img src="https://www.r-project.org/Rlogo.png" alt="R" width="30" height="30">
   </a>
+  <a href="https://shiny.posit.co">
+    <img src="https://d33wubrfki0l68.cloudfront.net/8f68bc526580587d60714f9279fbe9d86b25362a/79958/assets/img/shiny.png" alt="R" width="30" height="30">
+  </a>
 </div>
 
-<div class="div-1">
+<div align="left">
   <a href="https://shiny.posit.co">
     <img src="https://d33wubrfki0l68.cloudfront.net/8f68bc526580587d60714f9279fbe9d86b25362a/79958/assets/img/shiny.png" alt="R" width="30" height="30">
   </a>
