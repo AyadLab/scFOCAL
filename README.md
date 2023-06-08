@@ -179,18 +179,8 @@ library(DT)
   <a href="https://drive.google.com/u/0/uc?id=1geEhIXKRkSBII37V4TMo5bl2AzcUJ3zN&export=download"><strong>Download the ISOSCELES source file here! »</strong></a>
 </p>
 
-1. Get a free API Key at [https://example.com](https://example.com)
-2. Clone the repo
-   ```sh
-   git clone https://github.com/AyadLab/ISOSCELES.git
-   ```
-3. Install NPM packages
-   ```sh
-   npm install
-   ```
-4. Enter your API in `config.js`
-   ```js
-   const API_KEY = 'ENTER YOUR API';
+   ```{r}
+   devtools::install_local("pathToYourSourceFile/ISOSCELES_0.0.0.9000.tar.gz")
    ```
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
