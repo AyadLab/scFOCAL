@@ -208,6 +208,15 @@ BiocManager::install()
 
 Follow this brief tutorial to familiarize yourself with the application. 
 
+### Launch the ISOSCELES application
+
+Once installed, launching ISOSCELES is as easy as the following: 
+
+```{r}
+library(ISOSCELES) # load the ISOSCELES library including necessary drug signature data
+ISOSCELES::runISOSCELES() # launch the ISOSCELES shiny GUI
+```
+
 ### Step 1. - Data Upload
 
 ISOSCELES takes scRNAseq input in the form of a Seurat object saved as an RDS file. 
