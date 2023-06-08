@@ -208,6 +208,22 @@ BiocManager::install()
 
 Use this space to show useful examples of how a project can be used. Additional screenshots, code examples and demos work well in this space. You may also link to more resources.
 
+### Data Upload
+
+ISOSCELES takes scRNAseq input in the form of a Seurat object saved as an RDS file. 
+
+<div align="center">
+  <a href="https://github.com/AyadLab/ISOSCELES">
+    <img src="images/01_dataUpload.png" alt="abstract" width="600" height="153">
+  </a>
+</div>
+
+You can download a small example RDS file of a seurat object subsetted from our data presented within our manuscript here: 
+
+Simply choose your file to upload and allow the app to load the Seurat object into the processing environment. Once it is fully loaded, you will see a prompt for the successful upload and to proceed to the pre-processing step. 
+
+
+
 _For more examples, please refer to the [Documentation](https://example.com)_
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
