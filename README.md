@@ -201,14 +201,14 @@ BiocManager::install()
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-
+<!-- #################################################################################################################################################### -->
 
 <!-- USAGE EXAMPLES -->
 ## Usage
 
-Use this space to show useful examples of how a project can be used. Additional screenshots, code examples and demos work well in this space. You may also link to more resources.
+Follow this brief tutorial to familiarize yourself with the application. 
 
-### Data Upload
+### Step 1. - Data Upload
 
 ISOSCELES takes scRNAseq input in the form of a Seurat object saved as an RDS file. 
 
