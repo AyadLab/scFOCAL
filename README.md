@@ -223,7 +223,7 @@ ISOSCELES takes scRNAseq input in the form of a Seurat object saved as an RDS fi
 
 <div align="center">
   <a href="https://github.com/AyadLab/ISOSCELES">
-    <img src="images/01_dataUpload.png" alt="abstract" width="600" height="153">
+    <img src="images/01_dataUpload.png" alt="data upload" width="600" height="153">
   </a>
 </div>
 
@@ -231,6 +231,21 @@ You can download a small example RDS file of a seurat object subsetted from our 
 
 Simply choose your file to upload and allow the app to load the Seurat object into the processing environment. Once it is fully loaded, you will see a prompt for the successful upload and to proceed to the pre-processing step. 
 
+### Step 2. - Pre-Processing
+
+Analysis with ISOSCELES requires identification of tumor cell subpopulations, and non-tumor TME cell populations (control cell populations) using annotations within the metadata of your uploaded Seurat object. (i.e. obj@meta.data$cellType). Make sure that your annotations of interest are saved within your RDS file. 
+
+<div align="center">
+  <a href="https://github.com/AyadLab/ISOSCELES">
+    <img src="images/02_preProcessing.png" alt="data pre-processing" width="600" height="256">
+  </a>
+</div>
+
+Here, you may select the dimensionality reduction to use to visualize your data throughout the app (i.e. umap, pca, any custom reduction, etc.). 
+
+You will also select the relevant metadata column to group your cells by. Once selected, you will be able to select the individual identities within those annotations identifying transformed tumor cells (for GBM, we chose to group by GBM cell transcriptional state (Neftel et al., 2019) and your control populations (non-tumor cell types). Your selections will be visualized by coloring selected cells by whether they are grouped as control cells or diseased cells.  
+
+### Step 3. - Single-Cell RNAseq Derived Disease Signatures
 
 
 _For more examples, please refer to the [Documentation](https://example.com)_
