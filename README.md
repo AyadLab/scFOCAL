@@ -96,15 +96,9 @@
   </a>
 </div>
 
-<style> 
-  .div-1 {
-    background-color: #EBEBEB;
-  }
-</style>
-
 <div class="div-1">
   <a href="https://shiny.posit.co">
-    <img src="https://shiny.posit.co/images/shiny-solo.png" alt="R" width="30" height="30">
+    <img src="https://d33wubrfki0l68.cloudfront.net/8f68bc526580587d60714f9279fbe9d86b25362a/79958/assets/img/shiny.png" alt="R" width="30" height="30">
   </a>
 </div>
 
