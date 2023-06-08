@@ -227,6 +227,7 @@ ISOSCELES takes scRNAseq input in the form of a Seurat object saved as an RDS fi
   </a>
 </div>
 
+<br />
 You can download a small example RDS file of a seurat object subsetted from our data presented within our manuscript here: 
 
 Simply choose your file to upload and allow the app to load the Seurat object into the processing environment. Once it is fully loaded, you will see a prompt for the successful upload and to proceed to the pre-processing step. 
@@ -241,6 +242,7 @@ Analysis with ISOSCELES requires identification of tumor cell subpopulations, an
   </a>
 </div>
 
+<br />
 Here, you may select the dimensionality reduction to use to visualize your data throughout the app (i.e. umap, pca, any custom reduction, etc.). 
 
 You will also select the relevant metadata column to group your cells by. Once selected, you will be able to select the individual identities within those annotations identifying transformed tumor cells (for GBM, we chose to group by GBM cell transcriptional state (Neftel et al., 2019) and your control populations (non-tumor cell types). Your selections will be visualized by coloring selected cells by whether they are grouped as control cells or diseased cells.  
