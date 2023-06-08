@@ -36,7 +36,7 @@
   </a>
 
   <p align="center">
-    (I)nferred Drug (S)ensitivity (O)perating on the integration of (S)ingle-(C)ell (E)xpression and (L)1000 (E)xpression (S)ignatures
+    <strong>(I)nferred Drug (S)ensitivity (O)perating on the integration of (S)ingle-(C)ell (E)xpression and (L)1000 (E)xpression (S)ignatures</strong>
     <br />
     <a href="https://github.com/AyadLab/ISOSCELES"><strong>Explore the docs »</strong></a>
     <br />
