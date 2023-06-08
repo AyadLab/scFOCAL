@@ -119,7 +119,7 @@ ISOSCELES operates through the integration of drug-response transcriptional cons
   <a href="https://robert-k-suter.shinyapps.io/isosceles/"><strong>You can find ISOSCELES on shinyapps.io here! »</strong></a>
 </p>
 
-###### Due to the inherent large size of scRNAseq datasets, we highly reccomend installing the ISOSCELES R package to run the application locally. 
+###### Due to the inherent large size of scRNAseq datasets, we highly recommend installing the ISOSCELES R package to run the application locally. 
 
 <br />       
 <br />
@@ -167,14 +167,13 @@ library(ggforce)
 library(EnhancedVolcano)
 library(DT)
 ```
-
-This is an example of how to list things you need to use the software and how to install them.
-* npm
-  ```sh
-  npm install npm@latest -g
-  ```
-
 ### Installation
+
+##### Using devtools, the ISOSCELES R package can be installed from the source file. 
+
+<p align="left">
+  <a href="https://drive.google.com/file/d/1geEhIXKRkSBII37V4TMo5bl2AzcUJ3zN/view?usp=drive_link"><strong>Download the ISOSCELES source file here! »</strong></a>
+</p>
 
 1. Get a free API Key at [https://example.com](https://example.com)
 2. Clone the repo
