@@ -90,6 +90,11 @@
 
 <h4 align="left">Built With </h4>
 
+<div align="center">
+  <a href="https://r-project.org">
+    <img src="https://www.r-project.org/Rlogo.png" alt="R" width="30" height="30">
+  </a>
+  
 * [![R][r-project.org]][R-url]
 * [![Shiny][Shinyapps.io]][Shiny-url]
 
