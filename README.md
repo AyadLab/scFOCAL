@@ -187,7 +187,7 @@ BiocManager::install()
 ```
 
 
-### Installation
+### Installation from Source
 
 ##### Using devtools, the ISOSCELES R package can be installed from the source file. 
 
