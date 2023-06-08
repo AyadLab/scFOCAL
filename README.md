@@ -181,7 +181,7 @@ and to install core bioconductor packages:
 BiocManager::install()
 ```
 
-
+-----
 ### Installation from Source
 
 ##### Using devtools, the ISOSCELES R package can be installed from the source file. 
