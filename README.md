@@ -113,13 +113,13 @@ ISOSCELES operates through the integration of drug-response transcriptional cons
 <!-- GETTING STARTED -->
 ## Getting Started
 
-# ISOSCELES is available via shinyapps.io, or as a standalone R package, which launches the ISOSCELES shiny app locally. 
+#### ISOSCELES is available via shinyapps.io, or as a standalone R package, which launches the ISOSCELES shiny app locally. 
 
 <p align="center">
   <a href="https://robert-k-suter.shinyapps.io/isosceles/"><strong>Find ISOSCELES on shinyapps.io here! »</strong></a>
 </p>
 
-# Due to the inherent large size of scRNAseq datasets, we highly reccomend installing the ISOSCELES R package to run the application locally. 
+#### Due to the inherent large size of scRNAseq datasets, we highly reccomend installing the ISOSCELES R package to run the application locally. 
 
 <br />       
 <br />
