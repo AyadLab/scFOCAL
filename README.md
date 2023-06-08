@@ -38,7 +38,7 @@
 <h3 align="center">ISOSCELES</h3>
 
   <p align="center">
-    project_description
+    (I)nferred Drug (S)ensitivity (O)perating on the integration of (S)ingle-(C)ell (E)xpression and (L)1000 (E)xpression (S)ignatures
     <br />
     <a href="https://github.com/AyadLab/ISOSCELES"><strong>Explore the docs »</strong></a>
     <br />
