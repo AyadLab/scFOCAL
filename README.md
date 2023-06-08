@@ -204,10 +204,11 @@ BiocManager::install()
 <!-- #################################################################################################################################################### -->
 
 <!-- USAGE EXAMPLES -->
+-----
 ## Usage
 
 Follow this brief tutorial to familiarize yourself with the application. 
-
+-----
 ### Launch the ISOSCELES application
 
 Once installed, launching ISOSCELES is as easy as the following: 
@@ -216,7 +217,7 @@ Once installed, launching ISOSCELES is as easy as the following:
 library(ISOSCELES) # load the ISOSCELES library including necessary drug signature data
 ISOSCELES::runISOSCELES() # launch the ISOSCELES shiny GUI
 ```
-
+-----
 ### Step 1. - Data Upload
 
 ISOSCELES takes scRNAseq input in the form of a Seurat object saved as an RDS file. 
@@ -232,6 +233,7 @@ You can download a small example RDS file of a seurat object subsetted from our 
 
 Simply choose your file to upload and allow the app to load the Seurat object into the processing environment. Once it is fully loaded, you will see a prompt for the successful upload and to proceed to the pre-processing step. 
 
+-----
 ### Step 2. - Pre-Processing
 
 Analysis with ISOSCELES requires identification of tumor cell subpopulations, and non-tumor TME cell populations (control cell populations) using annotations within the metadata of your uploaded Seurat object. (i.e. obj@meta.data$cellType). Make sure that your annotations of interest are saved within your RDS file. 
