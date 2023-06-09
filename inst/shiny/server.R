@@ -392,7 +392,7 @@ server <- function(input, output) {
     if (input$CalcDiseaseSig == T) {
       RDSseurat <- rdsSeurat()
       top_dis_markers <- diseaseSigs() %>% group_by(cluster) %>% top_n(wt = avg_log2FC, n = 10)
-      sigHeatMap <- DoHeatmap(RDSseurat, features = top_dis_markers$gene) + scale_fill_gradient2(low = muted("navy"), mid = "white", high = muted("red"))
+      sigHeatMap <- DoHeatmap(RDSseurat, features = top_dis_markers$gene, group.by = input$groupByRDS) + scale_fill_gradient2(low = muted("navy"), mid = "white", high = muted("red"))
       sigHeatMap
     }
   })
@@ -839,7 +839,7 @@ server <- function(input, output) {
 
     progress6 <- shiny::Progress$new()
     on.exit(progress6$close())
-    progress6$set(message = "Calculating single-cell vs compound correlations", value = 0)
+    progress6$set(message = "Calculating Drug-Cell Connectivity", value = 0)
 
     # loop through compounds
     counter <- 1
@@ -1323,6 +1323,7 @@ server <- function(input, output) {
   output$scSynergySeq2_RDS <- renderPlot({ # need to update with dual slider
     if (input$perturbationButton >= 1){
       RDSseurat <-  seurat_corradded()
+      RDSseurat <- SetIdent(RDSseurat, value = input$groupByRDS)
       if (input$uploadCorrelationMatrix == TRUE){
         print(class(corrMatUpload()))
         testSpearman <- as.data.frame(t(corrMatUpload()))
@@ -1477,6 +1478,7 @@ server <- function(input, output) {
   output$scSynergySeq3_RDS <- renderPlot({ # need to update with dual slider
     if (input$perturbationButton >= 1){
       RDSseurat <-  seurat_corradded()
+      RDSseurat <- SetIdent(RDSseurat, value = input$groupByRDS)
       if (input$uploadCorrelationMatrix == TRUE){
         print(class(corrMatUpload()))
         testSpearman <- as.data.frame(t(corrMatUpload()))
@@ -1559,6 +1561,7 @@ server <- function(input, output) {
   resVsSensDEGS <- reactiveVal()
   observeEvent(input$calcSensVsResistantDEGS, {
     RDSseurat <- seurat_corradded()
+    RDSseurat <- SetIdent(RDSseurat, value = input$groupByRDS)
     tumorCells <- WhichCells(RDSseurat, idents = input$cancerCellIdentsRDS)
     compoundSpearmans <- RDSseurat@meta.data[input$referenceCompound]
     compoundSpearmans <- subset(compoundSpearmans, rownames(compoundSpearmans) %in% tumorCells)
@@ -1700,6 +1703,7 @@ server <- function(input, output) {
       # livingCells <- livingCellsRDS()
       # deadCells <- deadCellsRDS()
       RDSseurat <- seurat_corradded()
+      RDSseurat <- SetIdent(RDSseurat, value = input$groupByRDS)
       tumorCells <- WhichCells(RDSseurat, idents = input$cancerCellIdentsRDS)
       compoundSpearmans <- RDSseurat@meta.data[input$referenceCompound]
       compoundSpearmans <- subset(compoundSpearmans, rownames(compoundSpearmans) %in% tumorCells)
