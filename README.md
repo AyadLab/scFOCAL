@@ -223,7 +223,6 @@ ISOSCELES takes scRNAseq input in the form of a Seurat object saved as an RDS fi
   </a>
 </div>
 
-<br />
 #### You can download a small example RDS file of a seurat object subsetted from our data presented within our manuscript here: 
 
 <br /> 
