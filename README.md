@@ -274,7 +274,6 @@ ISOSCELES' Drug-Cell connectivity analysis scores cells for their concordance or
 Simply select the L1000 release date (currently 2017 is the only working option, new releases will be added to the application soon), and calculate Drug-Cell expression correlations. These results are downloadable, and can be uploaded back to the application so that this calculation does not need to be run repetitively. 
 
 
-<br /> 
 <p align="left">
   <a href="https://drive.google.com/u/0/uc?id=1JFJjxCUKsPvO_LMr7AB1MWgsT9uewL9c&export=download"><strong>Download a pre-calculated Drug-Cell Connectivity Matrix for the subsampled example dataset here! »</strong></a>
 </p>
