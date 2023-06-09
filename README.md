@@ -286,7 +286,7 @@ Under the results tab, you will be able to analyze differences between ISOSCELES
 
 <div align="center">
   <a href="https://github.com/AyadLab/ISOSCELES">
-    <img src="images/05_resultsTab.png" alt="Drug-Cell Connectivity Results" width="600" height="367">
+    <img src="images/05_resultsTab.png" alt="Drug-Cell Connectivity Results" width="600" height="321">
   </a>
 </div>
 
@@ -295,7 +295,7 @@ Under the results tab, you will be able to analyze differences between ISOSCELES
 
 
 <!-- ROADMAP -->
-## Roadmap
+<!-- ## Roadmap
 
 - [ ] Feature 1
 - [ ] Feature 2
@@ -306,6 +306,7 @@ See the [open issues](https://github.com/AyadLab/ISOSCELES/issues) for a full li
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
+-->
 
 
 <!-- CONTRIBUTING -->
@@ -314,7 +315,7 @@ See the [open issues](https://github.com/AyadLab/ISOSCELES/issues) for a full li
 Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
 
 If you have a suggestion that would make this better, please fork the repo and create a pull request. You can also simply open an issue with the tag "enhancement".
-Don't forget to give the project a star! Thanks again!
+<!-- Don't forget to give the project a star! Thanks again! -->
 
 1. Fork the Project
 2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
@@ -354,7 +355,7 @@ Project Link: [https://github.com/AyadLab/ISOSCELES](https://github.com/AyadLab/
 
 
 
-<!-- ACKNOWLEDGMENTS -->
+<!-- ACKNOWLEDGMENTS
 ## Acknowledgments
 
 * []()
@@ -362,8 +363,7 @@ Project Link: [https://github.com/AyadLab/ISOSCELES](https://github.com/AyadLab/
 * []()
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-
+-->
 
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
