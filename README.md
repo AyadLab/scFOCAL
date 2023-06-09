@@ -245,7 +245,7 @@ saveRDS(downsampled.obj, file = "downsampled_seuratObj.RDS")
 -----
 ### Step 2. - Pre-Processing
 
-Analysis with ISOSCELES requires identification of tumor cell subpopulations, and non-tumor TME cell populations (control cell populations) using annotations within the metadata of your uploaded Seurat object. (i.e. obj@meta.data$cellType). Make sure that your annotations of interest are saved within your RDS file. 
+Analysis with ISOSCELES requires identification of tumor cell subpopulations, and non-tumor TME cell populations (control cell populations) using annotations within the metadata of your uploaded Seurat object. (i.e. "obj@meta.data$cellType"). Make sure that your annotations of interest are saved within your RDS file. 
 
 <div align="center">
   <a href="https://github.com/AyadLab/ISOSCELES">
