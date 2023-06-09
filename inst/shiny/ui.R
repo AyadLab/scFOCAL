@@ -139,7 +139,7 @@ ui <- fluidPage(
                                                 ),
                                                 tabPanel(
                                                   "3D",
-                                                  "Coming Soon!"
+                                                  "Under Construction!"
                                                 ))
                                   ),
                                   splitLayout(
@@ -221,15 +221,12 @@ ui <- fluidPage(
                                                      ),
 
                                                      tabPanel(title = "Compare",
-                                                              "Correlation Matrix Viz Here"),
+                                                              "Under construction!"),
 
                                                      tabPanel(title = "Reversal",
-
-                                                              "Reversal here...",
                                                               wellPanel(
                                                                 radioButtons(inputId = "whichDiseaseSignatures",
-                                                                             choices = c("Whole dataset disease signatures",
-                                                                                         "Sliced dataset disease signatures"),
+                                                                             choices = c("Whole dataset disease signatures"),
                                                                              inline = F, selected = "Whole dataset disease signatures",
                                                                              label = "Select which disease signature set to use."),
                                                                 conditionalPanel(condition = 'input.whichDiseaseSignatures == "Sliced dataset disease signatures"',
