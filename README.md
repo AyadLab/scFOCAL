@@ -282,9 +282,11 @@ Once the Drug-Cell connectivity matrix is generated, the window below will popul
 -----
 ### Step 5. - In Silico Perturbation Results
 
+Under the results tab, you will be able to analyze differences between ISOSCELES predicted sensitive and resistant populations, including gene expression, proportions of discrete cell identities, as well as pharmacotranscriptomic properties across the entire L1000 dataset. The interpretation of these findings is explained in-depth within our manuscript. 
+
 <div align="center">
   <a href="https://github.com/AyadLab/ISOSCELES">
-    <img src="images/05_resultsTab.png" alt="disease signature generation" width="600" height="367">
+    <img src="images/05_resultsTab.png" alt="Drug-Cell Connectivity Results" width="600" height="367">
   </a>
 </div>
 
