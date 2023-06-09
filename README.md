@@ -258,7 +258,7 @@ You can now navigate to the 'Compare' and 'Reversal' tabs to analyze and visuali
 
 <div align="center">
   <a href="https://github.com/AyadLab/ISOSCELES">
-    <img src="images/03_diseaseSignatures.png" alt="disease signature generation" width="600" height="256">
+    <img src="images/03_DiseaseSignatures.png" alt="disease signature generation" width="600" height="256">
   </a>
 </div>
 
