@@ -263,12 +263,28 @@ You can now navigate to the 'Compare' and 'Reversal' tabs to analyze and visuali
 </div>
 
 -----
-### Step 4. - In Silico Perturbation (Drug-Cell Connectivity Analysis
+### Step 4. - In Silico Perturbation (Drug-Cell Connectivity Analysis)
 
+ISOSCELES' Drug-Cell connectivity analysis scores cells for their concordance or discordance with small molecule perturbation response signatures, to identify resistant and sensitive tumor cells, respectively. 
 
+Simply select the L1000 release date (currently 2017 is the only working option, new releases will be added to the application soon), and calculate Cell-Drug expression correlations. These results are downloadable, and can be uploaded back to the application so that this calculation does not need to be run repetitively. 
 
+<div align="center">
+  <a href="https://github.com/AyadLab/ISOSCELES">
+    <img src="images/04_inSilicoPerturbation.png" alt="disease signature generation" width="600" height="367">
+  </a>
+</div>
 
-_For more examples, please refer to the [Documentation](https://example.com)_
+Once the Drug-Cell connectivity matrix is generated, the window below will populate, and you may select a compound of interest to perform an in silico perturbation experiment on your scRNAseq data with. Once selected, a threshold for sensitivity and resistance (i.e. pseudodose) can be selected. Cells deemed sensitive or resistant will be visualized, as well as the proportions of cells within each grouping. Clicking the  run button will prepare the environment for step 5, visualization of results. 
+
+-----
+### Step 5. - In Silico Perturbation Results
+
+<div align="center">
+  <a href="https://github.com/AyadLab/ISOSCELES">
+    <img src="images/05_resultsTab.png" alt="disease signature generation" width="600" height="367">
+  </a>
+</div>
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
