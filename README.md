@@ -231,6 +231,17 @@ Simply choose your file to upload and allow the app to load the Seurat object in
   <a href="https://drive.google.com/u/0/uc?id=1Q-OqX27l9SRFX4iaJ1eFlXacUHk1vSPe&export=download"><strong>Download a subsampled version of our processed Seurat object available on GEO! »</strong></a>
 </p>
 
+###### Please note - this sub-sampled object only contains 500 out of greater than 100,000 cells analyzed within our manuscript to facilitate an accessible usage example. Findings from this subsample will not be representative of those resulting from analysis of the full scRNAseq analyzed within the manuscript. Subsampling was performed as follows:
+
+```{r}
+library(Seurat)
+set.seed(1)
+
+obj_toSub <- readRDS(file = "seuratObj.RDS")
+downsampled.obj <- obj_toSub[, sample(colnames(obj_toSub), size = 500, replace=F)]
+saveRDS(downsampled.obj, file = "downsampled_seuratObj.RDS")
+```
+
 -----
 ### Step 2. - Pre-Processing
 
