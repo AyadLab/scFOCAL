@@ -286,7 +286,7 @@ Under the results tab, you will be able to analyze differences between ISOSCELES
 
 <div align="center">
   <a href="https://github.com/AyadLab/ISOSCELES">
-    <img src="images/05_resultsTab.png" alt="Drug-Cell Connectivity Results" width="800" height="428">
+    <img src="images/05_resultsTab.png" alt="Drug-Cell Connectivity Results" width="900" height="482">
   </a>
 </div>
 
