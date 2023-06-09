@@ -226,6 +226,11 @@ ISOSCELES takes scRNAseq input in the form of a Seurat object saved as an RDS fi
 <br />
 You can download a small example RDS file of a seurat object subsetted from our data presented within our manuscript here: 
 
+
+<p align="left">
+  <a href="https://drive.google.com/u/0/uc?id=1JFJjxCUKsPvO_LMr7AB1MWgsT9uewL9c&export=download"><strong>Download a subsampled version of our processed Seurat object available on GEO! »</strong></a>
+</p>
+
 Simply choose your file to upload and allow the app to load the Seurat object into the processing environment. Once it is fully loaded, you will see a prompt for the successful upload and to proceed to the pre-processing step. 
 
 -----
