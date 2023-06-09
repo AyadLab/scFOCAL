@@ -269,7 +269,6 @@ ISOSCELES' Drug-Cell connectivity analysis scores cells for their concordance or
 
 Simply select the L1000 release date (currently 2017 is the only working option, new releases will be added to the application soon), and calculate Cell-Drug expression correlations. These results are downloadable, and can be uploaded back to the application so that this calculation does not need to be run repetitively. 
 
-<br />
 <div align="center">
   <a href="https://github.com/AyadLab/ISOSCELES">
     <img src="images/04_inSilicoPerturbation.png" alt="disease signature generation" width="600" height="817">
