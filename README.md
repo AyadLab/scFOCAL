@@ -126,7 +126,7 @@ ISOSCELES operates through the integration of drug-response transcriptional cons
 
 ### Prerequisites
 
-The ISOSCELES R package  for R > 4.3.0 can be installed with devtools...
+The ISOSCELES R package  for R > 4.3.0 can be installed with devtools.
 
 Installation of devtools in R:
 
@@ -167,7 +167,7 @@ library(ggforce)
 library(EnhancedVolcano)
 library(DT)
 ```
-Some of these dependencies will need to be installed via Bioconductor...
+Some of these dependencies will need to be installed via Bioconductor.
 
 Installation of BiocManager:
 
@@ -202,7 +202,7 @@ BiocManager::install()
 -----
 ## Usage
 
-Follow this brief tutorial to familiarize yourself with the application. 
+Follow this brief tutorial below to familiarize yourself with the application. 
 
 ### Launch the ISOSCELES application
 
@@ -240,9 +240,9 @@ Analysis with ISOSCELES requires identification of tumor cell subpopulations, an
 </div>
 
 <br />
-Here, you may select the dimensionality reduction to use to visualize your data throughout the app (i.e. umap, pca, any custom reduction, etc.). 
+Here, you may select the dimensionality reduction to use to visualize your data throughout the app (i.e. UMAP, PCA, any custom reduction, etc.). 
 <br />
-You will also select the relevant metadata column to group your cells by. Once selected, you will be able to select the individual identities within those annotations identifying transformed tumor cells (for GBM, we chose to group by GBM cell transcriptional state (Neftel et al., 2019) and your control populations (non-tumor cell types). Your selections will be visualized by coloring selected cells by whether they are grouped as control cells or diseased cells.  
+You will also select the relevant metadata column to group your cells by. Once selected, you will be able to select the individual identities within those annotations identifying transformed tumor cells (for GBM, we chose to group by GBM cell transcriptional state (Neftel et al., 2019) and your control populations (non-tumor cell types). Your selections will be visualized by coloring selected cells based on their grouping as control cells or diseased cells.  
 
 -----
 ### Step 3. - Single-Cell RNAseq Derived Disease Signatures
@@ -267,7 +267,7 @@ You can now navigate to the 'Compare' and 'Reversal' tabs to analyze and visuali
 
 ISOSCELES' Drug-Cell connectivity analysis scores cells for their concordance or discordance with small molecule perturbation response signatures, to identify resistant and sensitive tumor cells, respectively. 
 
-Simply select the L1000 release date (currently 2017 is the only working option, new releases will be added to the application soon), and calculate Cell-Drug expression correlations. These results are downloadable, and can be uploaded back to the application so that this calculation does not need to be run repetitively. 
+Simply select the L1000 release date (currently 2017 is the only working option, new releases will be added to the application soon), and calculate Drug-Cell expression correlations. These results are downloadable, and can be uploaded back to the application so that this calculation does not need to be run repetitively. 
 
 ###### runtime: Initial scoring of Drug-Cell connectivity is the most computationally expensive portion of this software. On our example dataset of only a few hundred cells, this step should run in less than 20 minutes on a 'normal' desktop computer. Upload of connectivity score matrix functionality is provided to cut down on compute time for future analyses. 
 
