@@ -226,9 +226,9 @@ ISOSCELES takes scRNAseq input in the form of a Seurat object saved as an RDS fi
 <br />
 You can download a small example RDS file of a seurat object subsetted from our data presented within our manuscript here: 
 
-
+<br /> 
 <p align="left">
-  <a href="https://drive.google.com/u/0/uc?id=1JFJjxCUKsPvO_LMr7AB1MWgsT9uewL9c&export=download"><strong>Download a subsampled version of our processed Seurat object available on GEO! »</strong></a>
+  <a href="https://drive.google.com/u/0/uc?id=1Q-OqX27l9SRFX4iaJ1eFlXacUHk1vSPe&export=download"><strong>Download a subsampled version of our processed Seurat object available on GEO! »</strong></a>
 </p>
 
 Simply choose your file to upload and allow the app to load the Seurat object into the processing environment. Once it is fully loaded, you will see a prompt for the successful upload and to proceed to the pre-processing step. 
@@ -273,6 +273,12 @@ You can now navigate to the 'Compare' and 'Reversal' tabs to analyze and visuali
 ISOSCELES' Drug-Cell connectivity analysis scores cells for their concordance or discordance with small molecule perturbation response signatures, to identify resistant and sensitive tumor cells, respectively. 
 
 Simply select the L1000 release date (currently 2017 is the only working option, new releases will be added to the application soon), and calculate Drug-Cell expression correlations. These results are downloadable, and can be uploaded back to the application so that this calculation does not need to be run repetitively. 
+
+
+<br /> 
+<p align="left">
+  <a href="https://drive.google.com/u/0/uc?id=1JFJjxCUKsPvO_LMr7AB1MWgsT9uewL9c&export=download"><strong>Download a pre-calculated Drug-Cell Connectivity Matrix for the subsampled example dataset here! »</strong></a>
+</p>
 
 ###### runtime: Initial scoring of Drug-Cell connectivity is the most computationally expensive portion of this software. On our example dataset of only a few hundred cells, this step should run in less than 20 minutes on a 'normal' desktop computer. Upload of connectivity score matrix functionality is provided to cut down on compute time for future analyses. 
 
