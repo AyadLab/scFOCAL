@@ -65,7 +65,7 @@
       </ul> -->
     </li>
     <li>
-      <a href="#getting-started">Getting Started</a>
+      <a href="#the-ISOSCELES-R-Package">The ISOSCELES R Package</a>
       <ul>
         <li><a href="#prerequisites">Prerequisites</a></li>
         <li><a href="#installation">Installation</a></li>
