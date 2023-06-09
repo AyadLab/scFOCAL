@@ -186,6 +186,8 @@ BiocManager::install()
 
 ##### Using devtools, the ISOSCELES R package can be installed from the source file. 
 
+With all dependencies satisfied, installation should take less than 5 minutes. 
+
 <p align="left">
   <a href="https://drive.google.com/u/0/uc?id=1geEhIXKRkSBII37V4TMo5bl2AzcUJ3zN&export=download"><strong>Download the ISOSCELES source file here! »</strong></a>
 </p>
