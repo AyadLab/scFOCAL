@@ -276,6 +276,7 @@ Simply select the L1000 release date (currently 2017 is the only working option,
   </a>
 </div>
 
+<br />
 Once the Drug-Cell connectivity matrix is generated, the window below will populate, and you may select a compound of interest to perform an in silico perturbation experiment on your scRNAseq data with. Once selected, a threshold for sensitivity and resistance (i.e. pseudodose) can be selected. Cells deemed sensitive or resistant will be visualized, as well as the proportions of cells within each grouping. Clicking the  run button will prepare the environment for step 5, visualization of results. 
 <br />
 
