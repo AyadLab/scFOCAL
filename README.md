@@ -230,7 +230,6 @@ Simply choose your file to upload and allow the app to load the Seurat object in
 <p align="left">
   <a href="https://drive.google.com/u/0/uc?id=1Q-OqX27l9SRFX4iaJ1eFlXacUHk1vSPe&export=download"><strong>Download a subsampled version of our processed Seurat object available on GEO! »</strong></a>
 </p>
-<br />
 
 -----
 ### Step 2. - Pre-Processing
