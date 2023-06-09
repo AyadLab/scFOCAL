@@ -271,7 +271,7 @@ Simply select the L1000 release date (currently 2017 is the only working option,
 
 <div align="center">
   <a href="https://github.com/AyadLab/ISOSCELES">
-    <img src="images/04_inSilicoPerturbation.png" alt="disease signature generation" width="600" height="367">
+    <img src="images/04_inSilicoPerturbation.png" alt="disease signature generation" width="600" height="817">
   </a>
 </div>
 
