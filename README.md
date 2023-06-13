@@ -368,7 +368,7 @@ Project Link: [https://github.com/AyadLab/ISOSCELES](https://github.com/AyadLab/
 
 <div align="center">
   <a href="https://sites.google.com/georgetown.edu/ayadlab/">
-    <img src="https://lh3.googleusercontent.com/1M50DyGpTuos7XqqchjSKMn5sCb6LwE32B262Is21HI2YPTErbFhGBZFAE6nKZ8X2dhMqyDrEcvE737v2XdClhs=w16383" alt="Ayad Laboratory" width="300" height="300">
+    <img src="images/Ayad lab.png" alt="Ayad Laboratory" width="300" height="300">
   </a>
 </div>
 
