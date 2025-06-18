@@ -31,8 +31,8 @@
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
-  <a href="https://github.com/AyadLab/ISOSCELES">
-    <img src="images/ISOSCELES.png" alt="Logo" width="600" height="93">
+  <a href="https://github.com/AyadLab/scFOCAL">
+    <img src="images/scFOCAL.png" alt="Logo" width="400" height="100">
   </a>
 </div>
 
@@ -40,15 +40,15 @@
 
 <div align="center">
   <p align="center">
-    <strong>(I)nferred Drug (S)ensitivity (O)perating on the integration of (S)ingle-(C)ell (E)xpression and (L)1000 (E)xpression (S)ignatures</strong>
+    <strong>(s)ingle-(c)ell (F)ramework for (O)mics-(C)onnectivity and (A)nalysis via (L)1000</strong>
     <br />
     <br />
-    <a href="https://github.com/AyadLab/ISOSCELES"><strong>Explore the docs »</strong></a>
+    <a href="https://github.com/AyadLab/scFOCAL"><strong>Explore the docs »</strong></a>
     <br />
     <br />
-    <a href="https://github.com/AyadLab/ISOSCELES/issues">Report Bug</a>
+    <a href="https://github.com/AyadLab/scFOCAL/issues">Report Bug</a>
     ·
-    <a href="https://github.com/AyadLab/ISOSCELES/issues">Request Feature</a>
+    <a href="https://github.com/AyadLab/scFOCAL/issues">Request Feature</a>
   </p>
 </div>
 
@@ -59,13 +59,13 @@
   <summary>Table of Contents</summary>
   <ol>
     <li>
-      <a href="#about-ISOSCELES">About ISOSCELES</a>
+      <a href="#about-scFOCAL">About scFOCAL</a>
       <!-- <ul>
         <li><a href="#built-with">Built With</a></li>
       </ul> -->
     </li>
     <li>
-      <a href="#the-ISOSCELES-R-Package">The ISOSCELES R Package</a>
+      <a href="#the-scFOCAL-R-Package">The scFOCAL R Package</a>
       <ul>
         <li><a href="#prerequisites">Prerequisites</a></li>
         <li><a href="#installation">Installation</a></li>
@@ -81,7 +81,7 @@
 </details>
 
 # License agreement
-1. The Board of Trustees of the Georgetown University provides OrthologAL software and code (“Service”) free of charge for non-commercial use only.Use of the Service by any commercial entity for any purpose, including research, is prohibited.
+1. The Board of Trustees of the Georgetown University provides scFOCAL software and code (“Service”) free of charge for non-commercial use only.Use of the Service by any commercial entity for any purpose, including research, is prohibited.
 2. By using the Service, you agree to be bound by the terms of this Agreement. Please read it carefully.
 3. You agree not to use the Service for commercial advantage, or in the course of for-profit activities.You agree not to use the Service on behalf of any organization that is not a non-profit organization. Commercial entities wishing to use this Service should
 contact Georgetown University Office of Technology Commercialization.
@@ -92,12 +92,12 @@ YOU HEREBY AGREE TO DEFEND AND INDEMNIFY GEORGETOWN, ITS TRUSTEES, EMPLOYEES, OF
 7. Subject to your compliance with the terms and conditions set forth in this Agreement, Georgetown grants you a revocable, non-exclusive, non-transferable right to access and make use of the Service.
 
 <!-- ABOUT THE PROJECT -->
-## About ISOSCELES
+## About scFOCAL
 
-ISOSCELES operates through the integration of drug-response transcriptional consensus signatures (TCSs) derived from the LINCS L1000 dataset with multi-subject single-cell RNA sequencing data, and facilitates analysis of drug and cell connectivity as a function of expression discordance from multiple perspectives.
+scFOCAL operates through the integration of drug-response transcriptional consensus signatures (TCSs) derived from the LINCS L1000 dataset with multi-subject single-cell RNA sequencing data, and facilitates analysis of drug and cell connectivity as a function of expression discordance from multiple perspectives.
 
 <div align="center">
-  <a href="https://github.com/AyadLab/ISOSCELES">
+  <a href="https://github.com/AyadLab/scFOCAL">
     <img src="images/graphicalAbstract.png" alt="abstract" width="600" height="646">
   </a>
 </div>
@@ -121,21 +121,21 @@ ISOSCELES operates through the integration of drug-response transcriptional cons
 <!-- GETTING STARTED -->
 <!-- ## Getting Started --> 
 
-###### ISOSCELES is available via shinyapps.io, or as a standalone R package. 
+###### scFOCAL is available via shinyapps.io, or as a standalone R package. 
 
 <p align="left">
-  <a href="https://robert-k-suter.shinyapps.io/isosceles/"><strong>You can find ISOSCELES on shinyapps.io here! »</strong></a>
+  <a href="https://robert-k-suter.shinyapps.io/isosceles/"><strong>You can find scFOCAL on shinyapps.io here! »</strong></a>
 </p>
 
-###### Due to the inherent large size of scRNAseq datasets, we highly recommend installing the ISOSCELES R package to run the application locally. 
+###### Due to the inherent large size of scRNAseq datasets, we highly recommend installing the scFOCAL R package to run the application locally. 
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-## The ISOSCELES R Package
+## The scFOCAL R Package
 
 ### Prerequisites
 
-The ISOSCELES R package  for R > 4.3.0 can be installed with devtools.
+The scFOCAL R package  for R > 4.3.0 can be installed with devtools.
 
 Installation of devtools in R:
 
@@ -148,7 +148,7 @@ install.packages("devtools")
 devtools::install_github("r-lib/devtools")
 ```
 
-ISOSCELES requires the following additional R packages:
+scFOCAL requires the following additional R packages:
 
 ```{r}
 library(shiny)
@@ -193,10 +193,10 @@ BiocManager::install()
 -----
 ### Installation
 
-##### Using devtools, the ISOSCELES R package can be installed from the source file. With all dependencies satisfied, installation should take less than 5 minutes. 
+##### Using devtools, the scFOCAL R package can be installed from the source file. With all dependencies satisfied, installation should take less than 5 minutes. 
 
 <p align="left">
-  <a href="https://drive.google.com/u/0/uc?id=1geEhIXKRkSBII37V4TMo5bl2AzcUJ3zN&export=download"><strong>Download the ISOSCELES source file here! »</strong></a>
+  <a href="https://drive.google.com/u/0/uc?id=1geEhIXKRkSBII37V4TMo5bl2AzcUJ3zN&export=download"><strong>Download the scFOCAL source file here! »</strong></a>
 </p>
 
    ```{r}
@@ -213,21 +213,21 @@ BiocManager::install()
 
 Follow this brief tutorial below to familiarize yourself with the application. 
 
-### Launch the ISOSCELES application
+### Launch the scFOCAL application
 
-Once installed, launching ISOSCELES is as easy as the following: 
+Once installed, launching scFOCAL is as easy as the following: 
 
 ```{r}
-library(ISOSCELES) # load the ISOSCELES library including necessary drug signature data
-ISOSCELES::runISOSCELES() # launch the ISOSCELES shiny GUI
+library(ISOSCELES) # load the scFOCAL library including necessary drug signature data
+ISOSCELES::runISOSCELES() # launch the scFOCAL shiny GUI
 ```
 -----
 ### Step 1. - Data Upload
 
-ISOSCELES takes scRNAseq input in the form of a Seurat object saved as an RDS file. 
+scFOCAL takes scRNAseq input in the form of a Seurat object saved as an RDS file. 
 
 <div align="center">
-  <a href="https://github.com/AyadLab/ISOSCELES">
+  <a href="https://github.com/AyadLab/scFOCAL">
     <img src="images/01_dataUpload.png" alt="data upload" width="600" height="153">
   </a>
 </div>
@@ -254,10 +254,10 @@ saveRDS(downsampled.obj, file = "downsampled_seuratObj.RDS")
 -----
 ### Step 2. - Pre-Processing
 
-Analysis with ISOSCELES requires identification of tumor cell subpopulations, and non-tumor TME cell populations (control cell populations) using annotations within the metadata of your uploaded Seurat object. (i.e. `obj@meta.data$cellType`). Make sure that your annotations of interest are saved within your RDS file. 
+Analysis with scFOCAL requires identification of tumor cell subpopulations, and non-tumor TME cell populations (control cell populations) using annotations within the metadata of your uploaded Seurat object. (i.e. `obj@meta.data$cellType`). Make sure that your annotations of interest are saved within your RDS file. 
 
 <div align="center">
-  <a href="https://github.com/AyadLab/ISOSCELES">
+  <a href="https://github.com/AyadLab/scFOCAL">
     <img src="images/02_preProcessing.png" alt="data pre-processing" width="600" height="256">
   </a>
 </div>
@@ -280,7 +280,7 @@ You can now navigate to the 'Compare' and 'Reversal' tabs to analyze and visuali
 <br />
 
 <div align="center">
-  <a href="https://github.com/AyadLab/ISOSCELES">
+  <a href="https://github.com/AyadLab/scFOCAL">
     <img src="images/03_DiseaseSignatures.png" alt="disease signature generation" width="600" height="367">
   </a>
 </div>
@@ -288,7 +288,7 @@ You can now navigate to the 'Compare' and 'Reversal' tabs to analyze and visuali
 -----
 ### Step 4. - In Silico Perturbation (Drug-Cell Connectivity Analysis)
 
-ISOSCELES' Drug-Cell connectivity analysis scores cells for their concordance or discordance with small molecule perturbation response signatures, to identify resistant and sensitive tumor cells, respectively. 
+scFOCAL's Drug-Cell connectivity analysis scores cells for their concordance or discordance with small molecule perturbation response signatures, to identify resistant and sensitive tumor cells, respectively. 
 
 Simply select the L1000 release date (currently 2017 is the only working option, new releases will be added to the application soon), and calculate Drug-Cell expression correlations. These results are downloadable, and can be uploaded back to the application so that this calculation does not need to be run repetitively. 
 
@@ -300,7 +300,7 @@ Simply select the L1000 release date (currently 2017 is the only working option,
 ###### runtime: Initial scoring of Drug-Cell connectivity is the most computationally expensive portion of this software. On our example dataset of only a few hundred cells, this step should run in less than 20 minutes on a 'normal' desktop computer. Upload of connectivity score matrix functionality is provided to cut down on compute time for future analyses. 
 
 <div align="center">
-  <a href="https://github.com/AyadLab/ISOSCELES">
+  <a href="https://github.com/AyadLab/scFOCAL">
     <img src="images/04_inSilicoPerturbation.png" alt="disease signature generation" width="600" height="817">
   </a>
 </div>
@@ -312,10 +312,10 @@ Once the Drug-Cell connectivity matrix is generated, the window below will popul
 -----
 ### Step 5. - In Silico Perturbation Results
 
-Under the results tab, you will be able to analyze differences between ISOSCELES predicted sensitive and resistant populations, including gene expression, proportions of discrete cell identities, as well as pharmacotranscriptomic properties across the entire L1000 dataset. The interpretation of these findings is explained in-depth within our manuscript. 
+Under the results tab, you will be able to analyze differences between scFOCAL predicted sensitive and resistant populations, including gene expression, proportions of discrete cell identities, as well as pharmacotranscriptomic properties across the entire L1000 dataset. The interpretation of these findings is explained in-depth within our manuscript. 
 
 <div align="center">
-  <a href="https://github.com/AyadLab/ISOSCELES">
+  <a href="https://github.com/AyadLab/scFOCAL">
     <img src="images/05_resultsTab.png" alt="Drug-Cell Connectivity Results" width="900" height="482">
   </a>
 </div>
@@ -332,7 +332,7 @@ Under the results tab, you will be able to analyze differences between ISOSCELES
 - [ ] Feature 3
     - [ ] Nested Feature
 
-See the [open issues](https://github.com/AyadLab/ISOSCELES/issues) for a full list of proposed features (and known issues).
+See the [open issues](https://github.com/AyadLab/scFOCAL/issues) for a full list of proposed features (and known issues).
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -373,7 +373,7 @@ Robert K. Suter, PhD - [@biovibin](https://twitter.com/biovibin) - rks82@georget
 <br />
 Nagi G. Ayad, PhD - [@nagi_ayad](https://twitter.com/nagi_ayad) - na853@georgetown.edu
 
-Project Link: [https://github.com/AyadLab/ISOSCELES](https://github.com/AyadLab/ISOSCELES)
+Project Link: [https://github.com/AyadLab/scFOCAL](https://github.com/AyadLab/scFOCAL)
 
 <div align="center">
   <a href="https://sites.google.com/georgetown.edu/ayadlab/">
@@ -398,15 +398,15 @@ Project Link: [https://github.com/AyadLab/ISOSCELES](https://github.com/AyadLab/
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
 [contributors-shield]: https://img.shields.io/github/contributors/AyadLab/ISOSCELES.svg?style=for-the-badge
-[contributors-url]: https://github.com/AyadLab/ISOSCELES/graphs/contributors
+[contributors-url]: https://github.com/AyadLab/scFOCAL/graphs/contributors
 [forks-shield]: https://img.shields.io/github/forks/AyadLab/ISOSCELES.svg?style=for-the-badge
-[forks-url]: https://github.com/AyadLab/ISOSCELES/network/members
+[forks-url]: https://github.com/AyadLab/scFOCAL/network/members
 [stars-shield]: https://img.shields.io/github/stars/AyadLab/ISOSCELES.svg?style=for-the-badge
-[stars-url]: https://github.com/AyadLab/ISOSCELES/stargazers
+[stars-url]: https://github.com/AyadLab/scFOCAL/stargazers
 [issues-shield]: https://img.shields.io/github/issues/AyadLab/ISOSCELES.svg?style=for-the-badge
-[issues-url]: https://github.com/AyadLab/ISOSCELES/issues
+[issues-url]: https://github.com/AyadLab/scFOCAL/issues
 [license-shield]: https://img.shields.io/github/license/AyadLab/ISOSCELES.svg?style=for-the-badge
-[license-url]: https://github.com/AyadLab/ISOSCELES/blob/master/LICENSE.txt
+[license-url]: https://github.com/AyadLab/scFOCAL/blob/master/LICENSE.txt
 [linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
 [linkedin-url]: https://linkedin.com/in/robert-suter-9a0a9667
 [product-screenshot]: images/screenshot.png
