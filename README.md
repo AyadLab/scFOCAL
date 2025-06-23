@@ -81,20 +81,24 @@
 </details>
 
 # License agreement
-1. The Board of Trustees of the Georgetown University provides scFOCAL software and code (“Service”) free of charge for non-commercial use only.Use of the Service by any commercial entity for any purpose, including research, is prohibited.
-2. By using the Service, you agree to be bound by the terms of this Agreement. Please read it carefully.
-3. You agree not to use the Service for commercial advantage, or in the course of for-profit activities.You agree not to use the Service on behalf of any organization that is not a non-profit organization. Commercial entities wishing to use this Service should
-contact Georgetown University Office of Technology Commercialization.
-4. THE SERVICE IS OFFERED “AS IS”, AND, TO THE EXTENT PERMITTED BY LAW, Georgetown MAKES NO REPRESENTATIONS AND EXTENDS NO WARRANTIES OF ANY KIND,EITHER EXPRESS OR IMPLIED. GEORGETOWN SHALL NOT BE LIABLE FOR ANY CLAIMS OR DAMAGES WITH RESPECT TO ANY LOSS OR OTHER CLAIM BY YOU OR ANY THIRD PARTY ON ACCOUNT OF, OR ARISING FROM THE USE OF THE SERVICE.
-YOU HEREBY AGREE TO DEFEND AND INDEMNIFY GEORGETOWN, ITS TRUSTEES, EMPLOYEES, OFFICERS, STUDENTS, AGENTS, FACULTY, REPRESENTATIVES, AND VOLUNTEERS (“GEORGETOWN INDEMNITEES”) FROM ANY LOSS OR CLAIM ASSERTED AGAINST GEORGETOWN INDEMNITEES ARISING FROM YOUR USE OF THE SERVICE.
-5. All rights not expressly granted to you in this Agreement are reserved and retained by Georgetown or its licensors or content providers. This Agreement provides no license under any patent.
-6. You agree that this Agreement and any dispute arising under it is governed by the laws of the State of Washington DC, United States of America, applicable to agreements negotiated, executed, and performed within DC.
-7. Subject to your compliance with the terms and conditions set forth in this Agreement, Georgetown grants you a revocable, non-exclusive, non-transferable right to access and make use of the Service.
+1. The Board of Trustees of the Georgetown University provides scFOCAL (Formerly ISOSCELES) software and code (“Service”) free of charge for non-commercial use only. Use of the Service by any commercial entity for any purpose, including research, is prohibited.
+   
+3. By using the Service, you agree to be bound by the terms of this Agreement. Please read it carefully.
+   
+5. You agree not to use the Service for commercial advantage, or in the course of for-profit activities.You agree not to use the Service on behalf of any organization that is not a non-profit organization. Commercial entities wishing to use this Service should contact Georgetown University Office of Technology Commercialization.
+
+7. THE SERVICE IS OFFERED “AS IS”, AND, TO THE EXTENT PERMITTED BY LAW, Georgetown MAKES NO REPRESENTATIONS AND EXTENDS NO WARRANTIES OF ANY KIND,EITHER EXPRESS OR IMPLIED. GEORGETOWN SHALL NOT BE LIABLE FOR ANY CLAIMS OR DAMAGES WITH RESPECT TO ANY LOSS OR OTHER CLAIM BY YOU OR ANY THIRD PARTY ON ACCOUNT OF, OR ARISING FROM THE USE OF THE SERVICE. YOU HEREBY AGREE TO DEFEND AND INDEMNIFY GEORGETOWN, ITS TRUSTEES, EMPLOYEES, OFFICERS, STUDENTS, AGENTS, FACULTY, REPRESENTATIVES, AND VOLUNTEERS (“GEORGETOWN INDEMNITEES”) FROM ANY LOSS OR CLAIM ASSERTED AGAINST GEORGETOWN INDEMNITEES ARISING FROM YOUR USE OF THE SERVICE.
+
+8. All rights not expressly granted to you in this Agreement are reserved and retained by Georgetown or its licensors or content providers. This Agreement provides no license under any patent.
+
+9. You agree that this Agreement and any dispute arising under it is governed by the laws of the State of Washington DC, United States of America, applicable to agreements negotiated, executed, and performed within DC.
+
+10. Subject to your compliance with the terms and conditions set forth in this Agreement, Georgetown grants you a revocable, non-exclusive, non-transferable right to access and make use of the Service.
 
 <!-- ABOUT THE PROJECT -->
 ## About scFOCAL
 
-scFOCAL operates through the integration of drug-response transcriptional consensus signatures (TCSs) derived from the LINCS L1000 dataset with multi-subject single-cell RNA sequencing data, and facilitates analysis of drug and cell connectivity as a function of expression discordance from multiple perspectives.
+scFOCAL (formerly ISOSCELES) operates through the integration of drug-response transcriptional consensus signatures (TCSs) derived from the LINCS L1000 dataset with multi-subject single-cell RNA sequencing data, and facilitates analysis of drug and cell connectivity as a function of expression discordance from multiple perspectives.
 
 <div align="center">
   <a href="https://github.com/AyadLab/scFOCAL">
@@ -215,11 +219,11 @@ Follow this brief tutorial below to familiarize yourself with the application.
 
 ### Launch the scFOCAL application
 
-Once installed, launching scFOCAL is as easy as the following: 
+Once the R package is installed, launching the scFOCAL GUI is as easy as the following: 
 
 ```{r}
-library(ISOSCELES) # load the scFOCAL library including necessary drug signature data
-ISOSCELES::runISOSCELES() # launch the scFOCAL shiny GUI
+library(scFOCAL) # load the scFOCAL library including necessary drug signature data
+scFOCAL::run_scFOCAL() # launch the scFOCAL shiny GUI
 ```
 -----
 ### Step 1. - Data Upload
@@ -290,7 +294,7 @@ You can now navigate to the 'Compare' and 'Reversal' tabs to analyze and visuali
 
 scFOCAL's Drug-Cell connectivity analysis scores cells for their concordance or discordance with small molecule perturbation response signatures, to identify resistant and sensitive tumor cells, respectively. 
 
-Simply select the L1000 release date (currently 2017 is the only working option, new releases will be added to the application soon), and calculate Drug-Cell expression correlations. These results are downloadable, and can be uploaded back to the application so that this calculation does not need to be run repetitively. 
+Simply select the L1000 release date (currently 2017 is the only working option, updated releases coming soon), and calculate Drug-Cell expression correlations. These results are downloadable, and can be uploaded back to the application so that this calculation does not need to be run repetitively. 
 
 
 <p align="left">
@@ -312,7 +316,8 @@ Once the Drug-Cell connectivity matrix is generated, the window below will popul
 -----
 ### Step 5. - In Silico Perturbation Results
 
-Under the results tab, you will be able to analyze differences between scFOCAL predicted sensitive and resistant populations, including gene expression, proportions of discrete cell identities, as well as pharmacotranscriptomic properties across the entire L1000 dataset. The interpretation of these findings is explained in-depth within our manuscript. 
+
+Under the results tab, you will be able to analyze differences between scFOCAL predicted sensitive and resistant populations, including gene expression, proportions of discrete cell identities, as well as pharmacotranscriptomic properties (i.e. Combination Score as outlined in Suter et al) across the entire L1000 dataset. The interpretation of these findings is explained in-depth within our manuscript. 
 
 <div align="center">
   <a href="https://github.com/AyadLab/scFOCAL">
@@ -344,7 +349,7 @@ See the [open issues](https://github.com/AyadLab/scFOCAL/issues) for a full list
 
 Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
 
-If you have a suggestion that would make this better, please fork the repo and create a pull request. You can also simply open an issue with the tag "enhancement".
+If you have a suggestion to improve the scFOCAL R package and GUI, please fork the repo and create a pull request. You can also simply open an issue with the tag "enhancement".
 <!-- Don't forget to give the project a star! Thanks again! -->
 
 1. Fork the Project
@@ -369,9 +374,9 @@ Not currently distributed under any license. Public for manuscript review.
 <!-- CONTACT -->
 ## Contact
 
-Robert K. Suter, PhD - [@biovibin](https://twitter.com/biovibin) - rks82@georgetown.edu
+Robert K. Suter, PhD - [SuterLab](https://suterlab.com/) - rks82@georgetown.edu
 <br />
-Nagi G. Ayad, PhD - [@nagi_ayad](https://twitter.com/nagi_ayad) - na853@georgetown.edu
+Nagi G. Ayad, PhD - [AyadLab](https://sites.google.com/georgetown.edu/ayadlab/home) - na853@georgetown.edu
 
 Project Link: [https://github.com/AyadLab/scFOCAL](https://github.com/AyadLab/scFOCAL)
 
