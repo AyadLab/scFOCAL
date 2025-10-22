@@ -102,7 +102,7 @@ scFOCAL (formerly ISOSCELES) operates through the integration of drug-response t
 
 <div align="center">
   <a href="https://github.com/AyadLab/scFOCAL">
-    <img src="images/graphicalAbstract.png" alt="abstract" width="600" height="646">
+    <img src="images/scFOCAL_graphicalAbstract.png" alt="abstract" width="600" height="646">
   </a>
 </div>
 
