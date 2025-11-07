@@ -1,6 +1,6 @@
-#' Launch ISOSCELES
+#' Launch scFOCAL
 #' @examples
-#' runISOSCELES()
+#' runscFOCAL()
 #' @import shiny
 #' @import Seurat
 #' @import ggplot2
@@ -25,9 +25,7 @@
 #' @import ggforce
 #' @import EnhancedVolcano
 #' @import DT
-#' @import shiny
 #' @export
-runISOSCELES <- function() {
-  shiny::runApp(appDir = system.file('shiny', package = "ISOSCELES"))
-  }
-
+runscFOCAL <- function() {
+  shiny::runApp(appDir = system.file('shiny', package = "scFOCAL"))
+}

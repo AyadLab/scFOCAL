@@ -29,19 +29,19 @@ options(shiny.maxRequestSize = 30000*1024^2) # increase limit to 15gb?
 #
 ################################################################################
 
-# LINCS Response Signature Data
-LINCS.ResponseSigs <- read.delim(
-  file = "matPH3_2_1_0.2_0.3_L1000_Batch2017_Regina_removed.txt", header = T)
-row.names(LINCS.ResponseSigs) <- LINCS.ResponseSigs$Genes
-LINCS.ResponseSigs <- na.omit(LINCS.ResponseSigs)
-newNames <- gsub("-", ".", rownames(LINCS.ResponseSigs))
-rownames(LINCS.ResponseSigs) <- newNames
-L1000_genes <- colnames(LINCS.ResponseSigs)
-L1000_compounds <- rownames(LINCS.ResponseSigs)
+# # LINCS Response Signature Data
+# LINCS.ResponseSigs <- read.delim(
+#   file = "matPH3_2_1_0.2_0.3_L1000_Batch2017_Regina_removed.txt", header = T)
+# row.names(LINCS.ResponseSigs) <- LINCS.ResponseSigs$Genes
+# LINCS.ResponseSigs <- na.omit(LINCS.ResponseSigs)
+# newNames <- gsub("-", ".", rownames(LINCS.ResponseSigs))
+# rownames(LINCS.ResponseSigs) <- newNames
+# L1000_genes <- colnames(LINCS.ResponseSigs)
+# L1000_compounds <- rownames(LINCS.ResponseSigs)
 
 ui <- fluidPage(
   tags$script(src = "https://kit.fontawesome.com/070e476711.js"),
-  img(src = "ISOSCELES.png", width = 700, height = 100),
+  img(src = "scFOCAL.png", width = 700, height = 170),
   hr(),
   # br(),
   tags$head(tags$style(HTML(
@@ -64,7 +64,7 @@ ui <- fluidPage(
   }
 
                             "))),
-  navlistPanel(well = T, fluid = T, widths = c(3, 7),
+  navlistPanel(well = T, fluid = T, widths = c(2, 8),
                # tags$head(tags$style(HTML(".tab-content { height: 83vh; overflow-y: auto !important; }" ))),
                tabPanel(tags$div(
                  tags$i(class = "fa-sharp fa-solid fa-desktop"),
@@ -75,7 +75,7 @@ ui <- fluidPage(
 
                tabPanel(tags$div(
                  tags$i(class="fa-sharp fa-solid fa-magnifying-glass-chart"),
-                 tags$span("- Run ISOSCELES")
+                 tags$span("- Run scFOCAL - dev")
                ), #put contents for actual application here
 
                tabsetPanel(
@@ -85,7 +85,7 @@ ui <- fluidPage(
                    tags$style(type = "text/css", "li a{color:#000000; font-samily: 'sans-serif', Arial Rounded MT Bold;}")
                  ),
                  br(),
-                 h4("Upload Seurat object RDS file"),
+                 h4("Step 1: Upload Seurat object RDS file"),
                  hr(),
                  br(),
                  br(),
@@ -98,11 +98,14 @@ ui <- fluidPage(
                              multiple = F,
                              accept = c(".RDS", ".Rds", ".rds")),
                    conditionalPanel(condition = 'output.seuratLoaded',
-                                    h4("Success! Seurat object loaded."))
+                                    h4("Success! Seurat object loaded."),
+                                    conditionalPanel(condition = 'output.seurat_obj_v5',
+                                                     h4("Version 5 Seurat Object Detected")))
                  ),
                  br(),
                  hr(),
-                 p(em("Depending on file size, after the file upload above is complete, it will still take some additional time for the data to be loaded into the processing environment. Please be patient."))
+                 p(em("Depending on file size, after the file upload above is complete, it will still take some additional time for the data to be loaded into the processing environment. Please be patient.")),
+                 br(),
                  ),
                  tabPanel(tags$div(
                    tags$i(class = "fa-sharp fa-solid fa-gears"),
@@ -130,16 +133,23 @@ ui <- fluidPage(
                                       br(),
                                       uiOutput(outputId = "reductionUseRDS"),
                                       uiOutput(outputId = "groupByRDS"),
-                                      uiOutput(outputId = "normalCellIdentsRDS"),
-                                      uiOutput('cancerCellIdentsRDS')),
+                                      checkboxInput(inputId = "noNormalCellIdentsCheckbox",
+                                                    label = "My data has no normal cell reference", value = FALSE),
+                                      conditionalPanel(condition = "!input.noNormalCellIdentsCheckbox",
+                                                       uiOutput(outputId = "normalCellIdentsRDS")
+                                      ),
+                                      uiOutput('cancerCellIdentsRDS'),
+                                      uiOutput('subject_replicate_ident')), # for combination scoring
                                     tabsetPanel(type = "tabs",
                                                 tabPanel(
-                                                  "2D",
+                                                  "Identities",
                                                   plotOutput(outputId = "dimplotRDS") # I'm guessing this is also a problem using the conditional panels now..
                                                 ),
                                                 tabPanel(
-                                                  "3D",
-                                                  "Under Construction!"
+                                                  "Subject/Replicate",
+                                                  plotOutput(outputId = "dimplotRDS_subject")# , # need to set up new dimplot
+                                                  # "Under Construction!"
+
                                                 ))
                                   ),
                                   splitLayout(
@@ -174,7 +184,7 @@ ui <- fluidPage(
                  conditionalPanel(condition = "output.seuratLoaded",
 
                                   wellPanel(
-                                    img(src = "SlicedDiseaseSignatureCalc.png", width = 650, height = 220),
+                                    img(src = "SlicedDiseaseSignatureCalc.png", width = "100%"),
                                   ),
 
                                   conditionalPanel(condition = "output.controlsNotSelected",
@@ -187,12 +197,16 @@ ui <- fluidPage(
                                   conditionalPanel(condition = "output.controlsSelected",
                                                    wellPanel(
                                                      sliderInput(inputId = "cellSubsetMax_1",
-                                                                 label = "Select number of cells per condition to test",
+                                                                 label = "Select maximum number of cells per condition to test",
                                                                  min = 100, max = 40000, step = 100, value = 500
                                                      ),
-                                                     actionButton(inputId = "CalcMarkers",
-                                                                  label = "Identify Cluster Markers",
-                                                                  icon = icon("sync")),
+                                                     radioButtons(inputId = "diseaseSignaturesByReplicate",
+                                                                  label = "Calculate overall or subject/replicate disease signatures?",
+                                                                  choices = list("Overall", "By Subject/Replicate"),
+                                                                  selected = c("Overall")),
+                                                     # actionButton(inputId = "CalcMarkers",
+                                                     #              label = "Identify Cluster Markers",
+                                                     #              icon = icon("sync")),
                                                      actionButton(inputId = "CalcDiseaseSig",
                                                                   label = "Calculate Disease Signatures",
                                                                   icon = icon("sync"))
@@ -226,13 +240,15 @@ ui <- fluidPage(
                                                      tabPanel(title = "Reversal",
                                                               wellPanel(
                                                                 radioButtons(inputId = "whichDiseaseSignatures",
-                                                                             choices = c("Whole dataset disease signatures"),
+                                                                             choices = c("Whole dataset disease signatures",
+                                                                                         "By subject / replicate disease signatures"),
                                                                              inline = F, selected = "Whole dataset disease signatures",
                                                                              label = "Select which disease signature set to use."),
-                                                                conditionalPanel(condition = 'input.whichDiseaseSignatures == "Sliced dataset disease signatures"',
+                                                                conditionalPanel(condition = 'input.whichDiseaseSignatures == "By subject / replicate disease signatures"',
                                                                                  conditionalPanel(condition = 'input.calcSlicedDiseaseSigs >= 1', # Need a message to show that you need to go back...
                                                                                                   actionButton(inputId = "reverseSlicedDiseaseSigs",
-                                                                                                               label = "Score compound reversal")
+                                                                                                               label = "Score compound reversal"),
+                                                                                                  hr()
                                                                                  ),
                                                                                  conditionalPanel(condition = 'input.calcSlicedDiseaseSigs < 1',
                                                                                                   "Please calculate sliced disease signatures first."
@@ -305,7 +321,7 @@ ui <- fluidPage(
                  ),
                  tabPanel(tags$div(
                    tags$i(class = "fa-sharp fa-solid fa-pills"),
-                   tags$span("4. In Silico Perturbation"),
+                   tags$span("4. Cell-Drug Connectivity"),
                    tags$style(type = "text/css", "li a{color:#000000; font-samily: 'sans-serif', Arial Rounded MT Bold;}")
                  ),
 
@@ -322,15 +338,266 @@ ui <- fluidPage(
                  ),
                  conditionalPanel(condition = "output.seuratLoaded",
                                   conditionalPanel(condition = "output.controlsNotSelected",
-                                                   h4("No test cell populations selected"),
-                                                   br(),
-                                                   p(strong("Please return to the pre-processing tab to select test cell populations")),
-                                                   hr()
+                                                   conditionalPanel(condition = "!input.noNormalCellIdentsCheckbox",
+                                                                    h4("No test cell populations selected"),
+                                                                    br(),
+                                                                    p(strong("Please return to the pre-processing tab to select test cell populations")),
+                                                                    hr()
+                                                   ),
+                                                   conditionalPanel(condition = "input.noNormalCellIdentsCheckbox",
+                                                                    "in!",
+                                                                    conditionalPanel(condition="output.controlsNotSelected_noControl",
+                                                                                     h4("No test cell populations selected"),
+                                                                                     br(),
+                                                                                     p(strong("Please return to the pre-processing tab to select test cell populations")),
+                                                                                     hr()
+                                                                    ),
+                                                                    conditionalPanel(condition="output.controlsSelected_noControl",
+                                                                                     wellPanel(
+                                                                                       h4("Step 1: Calculate L1000 small molecule vs single-cell connectivity"),
+                                                                                       br(),
+                                                                                       splitLayout(
+                                                                                         wellPanel(
+                                                                                           conditionalPanel(condition = "output.uploadCorrelationMatrix",
+                                                                                                            hr(),
+                                                                                                            uiOutput("L1000_release_InSilico"),
+                                                                                                            actionButton(inputId = "CalculateRDS_L1000_Spearman_Mat", label = "Calculate single-cell compound discordance")
+                                                                                           ),
+                                                                                           checkboxInput(inputId = "uploadCorrelationMatrix", label = "Upload a previously calculated Cell-Drug Connectivity file."),
+                                                                                           conditionalPanel(condition = "input.uploadCorrelationMatrix",
+                                                                                                            fileInput(inputId = "corrMatUpload",
+                                                                                                                      label = NULL,
+                                                                                                                      buttonLabel = "Browse...",
+                                                                                                                      placeholder = "No file selected",
+                                                                                                                      width = NULL,
+                                                                                                                      multiple = F,
+                                                                                                                      accept = c(".csv", ".CSV"))
+                                                                                           )
+                                                                                         ),
+                                                                                         wellPanel(
+                                                                                           conditionalPanel(condition = "output.corrMatrixCalculated",
+                                                                                                            hr(), # this part needs fixing... should align with left side
+                                                                                                            h4("Discordance calculations complete. Download to avoid recalculation"),
+                                                                                                            downloadButton(outputId = "RDScorrMatDownload", label = "Download single-cell vs small molecule correlations")
+                                                                                           ),
+                                                                                           conditionalPanel(condition = "output.corrMatUploaded",
+                                                                                                            hr(),
+                                                                                                            h5("Discordance matrix upload detected!"),
+                                                                                                            h5("Integrating into Seurat object..."),
+                                                                                                            hr()
+                                                                                           )
+                                                                                         )
+                                                                                       ),
+                                                                                       h5("Step 1.2 (Optional): Calculate cell-drug connectivities for custom TCS input."),
+                                                                                       # conditionalPanel(condition = "output.TCSuploaded",
+                                                                                       checkboxInput(inputId = "customTCSasRef", label = "Utilize custom TCS signature?"),
+                                                                                       # ),
+                                                                                       # Score single-cell data for connectivity to custom TCS
+                                                                                       ################################################################################
+                                                                                       # conditionalPanel(condition = "input.customTCSasRef",
+                                                                                       # splitLayout(
+                                                                                       wellPanel(
+                                                                                         conditionalPanel(condition = "input.customTCSasRef",
+                                                                                                          splitLayout(
+                                                                                                            wellPanel(
+                                                                                                              textInput(inputId = "Custom_TCS_nameInput",
+                                                                                                                        label = "1.2.1: Enter a name for your uploaded TCS (avoid spaces)",
+                                                                                                                        placeholder = "Custom_Drug_Signature", width = "50%"),
+                                                                                                              fileInput(inputId = "customTCScsvPath",
+                                                                                                                        label = "1.2.2: Upload custom response signature. (.csv)",
+                                                                                                                        buttonLabel = "Browse...",
+                                                                                                                        placeholder = "No file selected",
+                                                                                                                        width = "50%",
+                                                                                                                        multiple = F,
+                                                                                                                        accept = c(".csv")),
+                                                                                                              conditionalPanel(condition = 'output.TCSuploaded',
+                                                                                                                               actionButton(inputId = "customTCSbrowser_button",
+                                                                                                                                            label = "Browse TCS upload",
+                                                                                                                                            icon = icon("table")),
+                                                                                                                               hr(),
+                                                                                                                               radioButtons(inputId = "TCS_scoring_method",
+                                                                                                                                            label = "1.2.3: Select connectivity scoring approach:",
+                                                                                                                                            choices = list("Spearman", "Singscore", "ssGSEA"),
+                                                                                                                                            selected = "Spearman", inline = T),
+                                                                                                                               # uiOutput("L1000_release_InSilico"),
+                                                                                                                               actionButton(inputId = "CalculateCustomTCSConnectivities", label = "Calculate custom TCS single-cell connectivity"),
+                                                                                                                               hr(),
+                                                                                                                               conditionalPanel(condition = 'input.CalculateCustomTCSConnectivities',
+                                                                                                                                                downloadButton(outputId = 'downloadCustomTCScellConnectivities', label = "Download custom TCS connectivities"))
+                                                                                                              )
+                                                                                                            ),
+                                                                                                            wellPanel(
+                                                                                                              conditionalPanel(condition = 'output.TCSuploaded',
+                                                                                                                               hr(),
+                                                                                                                               h5("Success! Custom TCS loaded."),
+                                                                                                                               hr())
+                                                                                                            ))
+
+
+                                                                                                          # REFER TO SERVER.R
+                                                                                         )),
+                                                                                       # ),
+                                                                                       tags$hr(style = "border-top: 3px solid black;"),
+                                                                                       conditionalPanel(condition = "output.corrMatrixCalculated || output.corrMatUploaded",
+                                                                                                        h4("Step 1: Select reference compound and set parameters."),
+                                                                                                        br(),
+                                                                                                        radioButtons(inputId = "Reference_L1000_or_Custom",
+                                                                                                                     label = "Step 1.1: L1000 or Custom TCS?",
+                                                                                                                     choices = list("L1000 Derived", "Custom TCS Upload"),
+                                                                                                                     selected = "L1000 Derived", inline = TRUE),
+                                                                                                        conditionalPanel(condition = "input.Reference_L1000_or_Custom == 'L1000 Derived'",
+                                                                                                                         wellPanel(
+                                                                                                                           splitLayout(
+                                                                                                                             wellPanel(
+                                                                                                                               selectizeInput(inputId = "referenceCompound",
+                                                                                                                                              label = "Select reference compound",
+                                                                                                                                              choices = L1000_compounds,
+                                                                                                                                              selected = "alisertib",
+                                                                                                                                              multiple = F,
+                                                                                                                                              width = NULL,
+                                                                                                                                              size = NULL),
+                                                                                                                               # wellPanel(
+                                                                                                                               sliderInput(inputId = "sigMinCutoffRDS",
+                                                                                                                                           label = "Set visualization cutoff minimum:",
+                                                                                                                                           value = -1, min = -1, max = 1, step = 0.1),
+                                                                                                                               sliderInput(inputId = "sigMaxCutoffRDS",
+                                                                                                                                           label = "Set visualization cutoff maximum:",
+                                                                                                                                           value = 0, min = -1, max = 1, step = 0.1),
+                                                                                                                               sliderInput(inputId = "correlationCutoff_RDS", "correlationCutoff_RDS",
+                                                                                                                                           label = "Set sensitivity and resistance cut-offs [adjustable pseudodose]",
+                                                                                                                                           value = c(0, 0), min = -1, max = 1, step = 0.05)
+                                                                                                                               # )
+                                                                                                                             ),
+                                                                                                                             plotOutput(outputId = "refSignatureUMAPRDS")
+                                                                                                                           )
+                                                                                                                         ),
+                                                                                                                         # wellPanel(
+                                                                                                                           plotOutput(outputId = "scSynergySeq1RDS"),
+                                                                                                                         # ),
+                                                                                                                         hr(),
+                                                                                                                         br(),
+                                                                                                                         wellPanel(
+                                                                                                                           splitLayout(
+                                                                                                                             textOutput("referenceCompound", ),
+                                                                                                                             actionButton("perturbationButton", label = "Run Perturbation Analysis", icon = icon("redo"))
+                                                                                                                           ),
+                                                                                                                           conditionalPanel(condition = "input.perturbationButton",
+                                                                                                                                            hr(),
+                                                                                                                                            h4("Success! Please navigate to the results tab."),
+                                                                                                                                            hr())
+                                                                                                                         )
+                                                                                                        ) # ,
+                                                                                                        # conditionalPanel(condition = "input.Reference_L1000_or_Custom =='Custom TCS Upload'",
+                                                                                                        #                  conditionalPanel(condition = "input.CalculateCustomTCSConnectivities",
+                                                                                                        #                                   # "custom TCS connectivites calculated!",
+                                                                                                        #                                   splitLayout(
+                                                                                                        #                                     wellPanel(sliderInput(inputId = "sigMinCutoff_customTCS",
+                                                                                                        #                                                           label = "Set visualization cutoff minimum:",
+                                                                                                        #                                                           value = -1, min = -1, max = 1, step = 0.1),
+                                                                                                        #                                               sliderInput(inputId = "sigMaxCutoff_customTCS",
+                                                                                                        #                                                           label = "Set visualization cutoff maximum:",
+                                                                                                        #                                                           value = 0, min = -1, max = 1, step = 0.1),
+                                                                                                        #                                               sliderInput(inputId = "correlationCutoff_customTCS", "correlationCutoff_customTCS",
+                                                                                                        #                                                           label = "Set sensitivity and resistance cut-offs [adjustable pseudodose]",
+                                                                                                        #                                                           value = c(0, 0), min = -1, max = 1, step = 0.05)),
+                                                                                                        #                                     wellPanel(plotOutput(outputId = "CustomRefSignatureUMAPRDS"))
+                                                                                                        #                                   ),
+                                                                                                        #                                   wellPanel(
+                                                                                                        #                                     plotOutput(outputId = "scSynergySeq_custTCS")),
+                                                                                                        #                                   hr(),
+                                                                                                        #                                   br(),
+                                                                                                        #                                   wellPanel(
+                                                                                                        #                                     splitLayout(
+                                                                                                        #                                       textOutput("referenceCompound_customTCS"),
+                                                                                                        #                                       actionButton("perturbationButton_customTCS", label = "Run Perturbation Analysis", icon = icon("redo"))
+                                                                                                        #                                     ),
+                                                                                                        #                                     conditionalPanel(condition = "input.perturbationButton_customTCS",
+                                                                                                        #                                                      hr(),
+                                                                                                        #                                                      h4("Success! Please navigate to the results tab."),
+                                                                                                        #                                                      hr()
+                                                                                                        #
+                                                                                                        #                                     ),
+                                                                                                        #                                     conditionalPanel(condition = "input.perturbationButton_customTCS",
+                                                                                                        #                                                      downloadButton(outputId = "download_customTCS_sensitivityAssigner", label = "Download custom TCS sensitivity dataframe"),
+                                                                                                        #                                                      tabsetPanel(
+                                                                                                        #                                                        tabPanel("Resistance Signature",
+                                                                                                        #                                                                 wellPanel(
+                                                                                                        #                                                                   splitLayout(
+                                                                                                        #                                                                     wellPanel(
+                                                                                                        #                                                                       sliderInput(inputId = "cellSubsetMax_pert_customTCS",
+                                                                                                        #                                                                                   label = "Select number of cells per condition to test",
+                                                                                                        #                                                                                   min = 100, max = 40000, step = 100, value = 500
+                                                                                                        #                                                                       ),
+                                                                                                        #                                                                       selectizeInput(inputId = "pertDEx_testUse_customTCS",
+                                                                                                        #                                                                                      label = "Select differential expression test to use",
+                                                                                                        #                                                                                      choices = c("MAST", "roc", "wilcoxon", "deseq"),
+                                                                                                        #                                                                                      selected = "MAST"),
+                                                                                                        #                                                                       actionButton(inputId = "calcSensVsResistantDEGS_customTCS",
+                                                                                                        #                                                                                    label = "Run differential expression analysis"),
+                                                                                                        #                                                                       conditionalPanel(condition = "output.resVsSensCalced_customTCS",
+                                                                                                        #                                                                                        hr(),
+                                                                                                        #                                                                                        downloadButton(outputId = "resVsSensDEGSdownload_customTCS",
+                                                                                                        #                                                                                                       label = "Download differential expression results")
+                                                                                                        #                                                                       )
+                                                                                                        #
+                                                                                                        #                                                                     ),
+                                                                                                        #                                                                     wellPanel(
+                                                                                                        #                                                                       plotOutput(outputId = "resVsSensVolcano_customTCS")
+                                                                                                        #                                                                     )
+                                                                                                        #                                                                   ),
+                                                                                                        #                                                                   DT::dataTableOutput(outputId = "resVsSensTable_customTCS")
+                                                                                                        #                                                                 )
+                                                                                                        #                                                        ),
+                                                                                                        #                                                        tabPanel("Proportion Shift"),
+                                                                                                        #                                                        tabPanel("Combination Scoring",
+                                                                                                        #                                                                 splitLayout(
+                                                                                                        #                                                                   wellPanel(
+                                                                                                        #                                                                     radioButtons(inputId = "customTCS_limmma_TREAT",
+                                                                                                        #                                                                                  label = "Utilize TREAT in limma to adjust null hypothesis?",
+                                                                                                        #                                                                                  choices = list("Yes", "No"),
+                                                                                                        #                                                                                  selected = "No"),
+                                                                                                        #                                                                     plotOutput(outputId = "customTCS_limmaVolc"),
+                                                                                                        #                                                                     downloadButton(outputId = "download_customTCS_limmaVolc", label = "Download volcano .pdf")
+                                                                                                        #                                                                   ),
+                                                                                                        #                                                                   wellPanel(
+                                                                                                        #                                                                     plotOutput(outputId = "customTCS_rcm_overall")
+                                                                                                        #                                                                   )
+                                                                                                        #                                                                 ),
+                                                                                                        #                                                                 wellPanel(
+                                                                                                        #                                                                   plotOutput(outputId = 'customTCS_combinationScoreBar'),
+                                                                                                        #                                                                   plotOutput(outputId = 'customTCS_CombinationHeatmap'),
+                                                                                                        #                                                                   plotOutput(outputId = "customTCS_CombinationHeatmap_2"),
+                                                                                                        #                                                                   actionButton(inputId = 'customTCS_combinationTableButton',
+                                                                                                        #                                                                                label = "View data in table", icon = icon("table")),
+                                                                                                        #                                                                   downloadButton(outputId = "combinationScoreDownload_customTCS",
+                                                                                                        #                                                                                  label = "Download Combination Scoring Results Table")
+                                                                                                        #                                                                 )
+                                                                                                        #
+                                                                                                        #                                                        )
+                                                                                                        #                                                      )) # end tabset
+                                                                                                        #                                   )
+                                                                                                        #                  ),
+                                                                                                        #                  conditionalPanel(condition = "input.CalculateCustomTCSConnectivities == 0",
+                                                                                                        #                                   "custom TCS connectivities not yet calculated, circle back...")
+                                                                                                        # )# ,
+
+
+
+
+                                                                                       )
+                                                                                       # textOutput('finalMatrixText')
+                                                                                       # sliderInput(inputId = "cellSubsetMax_1",
+                                                                                       #             label = "Select number of cells per condition to test",
+                                                                                       #             min = 100, max = 40000, step = 100, value = 500
+                                                                                       # )
+                                                                                     )
+                                                                    )
+                                                   )
                                   ),
 
-                                  conditionalPanel(condition = "output.controlsSelected",
+                                  conditionalPanel(condition = "output.controlsSelected", ##################################################################################################### < start of Controls Selected Conditional Panel...
                                                    wellPanel(
-                                                     h4("Step 1: Calculate L1000 small molecule vs single-cell correlations"),
+                                                     h4("Step 1: Calculate L1000 small molecule vs single-cell connectivity"),
                                                      br(),
                                                      splitLayout(
                                                        wellPanel(
@@ -339,7 +606,7 @@ ui <- fluidPage(
                                                                           uiOutput("L1000_release_InSilico"),
                                                                           actionButton(inputId = "CalculateRDS_L1000_Spearman_Mat", label = "Calculate single-cell compound discordance")
                                                          ),
-                                                         checkboxInput(inputId = "uploadCorrelationMatrix", label = "Alternatively, upload precalculated correlation file", ),
+                                                         checkboxInput(inputId = "uploadCorrelationMatrix", label = "Upload a previously calculated Cell-Drug Connectivity file"),
                                                          conditionalPanel(condition = "input.uploadCorrelationMatrix",
                                                                           fileInput(inputId = "corrMatUpload",
                                                                                     label = NULL,
@@ -364,54 +631,203 @@ ui <- fluidPage(
                                                          )
                                                        )
                                                      ),
-                                                     # br(),
-                                                     hr(),
-                                                     conditionalPanel(condition = "output.corrMatrixCalculated || output.corrMatUploaded",
-                                                                      h4("Step 2: Select reference compound and set parameters."),
-                                                                      br(),
-
-                                                                      wellPanel(
+                                                     h5("Step 1.2 (Optional): Calculate cell-drug connectivities for custom TCS input."),
+                                                     # conditionalPanel(condition = "output.TCSuploaded",
+                                                     checkboxInput(inputId = "customTCSasRef", label = "Utilize custom TCS signature?"),
+                                                     # ),
+                                                     # Score single-cell data for connectivity to custom TCS
+                                                     ################################################################################
+                                                     # conditionalPanel(condition = "input.customTCSasRef",
+                                                     # splitLayout(
+                                                     wellPanel(
+                                                       conditionalPanel(condition = "input.customTCSasRef",
                                                                         splitLayout(
                                                                           wellPanel(
-                                                                            selectizeInput(inputId = "referenceCompound",
-                                                                                           label = "Select reference compound (searchable...)",
-                                                                                           choices = L1000_compounds,
-                                                                                           selected = "alisertib",
-                                                                                           multiple = F,
-                                                                                           width = NULL,
-                                                                                           size = NULL),
-                                                                            # wellPanel(
-                                                                            sliderInput(inputId = "sigMinCutoffRDS",
-                                                                                        label = "Set visualization cutoff minimum:",
-                                                                                        value = -1, min = -1, max = 1, step = 0.1),
-                                                                            sliderInput(inputId = "sigMaxCutoffRDS",
-                                                                                        label = "Set visualization cutoff maximum:",
-                                                                                        value = 0, min = -1, max = 1, step = 0.1),
-                                                                            sliderInput(inputId = "correlationCutoff_RDS", "correlationCutoff_RDS",
-                                                                                        label = "Set sensitivity and resistance cut-offs [adjustable pseudodose]",
-                                                                                        value = c(0, 0), min = -1, max = 1, step = 0.05)
-                                                                            # )
+                                                                            textInput(inputId = "Custom_TCS_nameInput",
+                                                                                      label = "1.2.1: Enter a name for your uploaded TCS (avoid spaces)",
+                                                                                      placeholder = "Custom_Drug_Signature", width = "50%"),
+                                                                            fileInput(inputId = "customTCScsvPath",
+                                                                                      label = "1.2.2: Upload custom response signature. (.csv)",
+                                                                                      buttonLabel = "Browse...",
+                                                                                      placeholder = "No file selected",
+                                                                                      width = "50%",
+                                                                                      multiple = F,
+                                                                                      accept = c(".csv")),
+                                                                            conditionalPanel(condition = 'output.TCSuploaded',
+                                                                                             actionButton(inputId = "customTCSbrowser_button",
+                                                                                                          label = "Browse TCS upload",
+                                                                                                          icon = icon("table")),
+                                                                                             hr(),
+                                                                                             radioButtons(inputId = "TCS_scoring_method",
+                                                                                                          label = "1.2.3: Select connectivity scoring approach:",
+                                                                                                          choices = list("Spearman", "Singscore", "ssGSEA"),
+                                                                                                          selected = "Spearman", inline = T),
+                                                                                             # uiOutput("L1000_release_InSilico"),
+                                                                                             actionButton(inputId = "CalculateCustomTCSConnectivities", label = "Calculate custom TCS single-cell connectivity"),
+                                                                                             hr(),
+                                                                                             conditionalPanel(condition = 'input.CalculateCustomTCSConnectivities',
+                                                                                                              downloadButton(outputId = 'downloadCustomTCScellConnectivities', label = "Download custom TCS connectivities"))
+                                                                            )
                                                                           ),
-                                                                          plotOutput(outputId = "refSignatureUMAPRDS")
-                                                                        )
-                                                                      ),
-                                                                      wellPanel(
-                                                                        plotOutput(outputId = "scSynergySeq1RDS")
-                                                                      ),
-                                                                      hr(),
-                                                                      br(),
-                                                                      wellPanel(
-                                                                        splitLayout(
-                                                                          textOutput("referenceCompound", ),
-                                                                          actionButton("perturbationButton", label = "Run Perturbation Analysis", icon = icon("redo"))
-                                                                        ),
-                                                                        conditionalPanel(condition = "input.perturbationButton",
-                                                                                         hr(),
-                                                                                         h4("Success! Please navigate to the results tab."),
-                                                                                         hr())
-                                                                      )
+                                                                          wellPanel(
+                                                                            conditionalPanel(condition = 'output.TCSuploaded',
+                                                                                             hr(),
+                                                                                             h5("Success! Custom TCS loaded."),
+                                                                                             hr())
+                                                                          ))
 
-                                                     )
+
+                                                                        # REFER TO SERVER.R
+                                                       )),
+                                                     # ),
+                                                     # tags$hr(style = "border-top: 3px solid black;"),
+                                                     # conditionalPanel(condition = "output.corrMatrixCalculated || output.corrMatUploaded",
+                                                     #                  h4("Step 2: Select reference compound and set parameters."),
+                                                     #                  br(),
+                                                     #                  radioButtons(inputId = "Reference_L1000_or_Custom",
+                                                     #                               label = "Select reference compound TCS source",
+                                                     #                               choices = list("L1000 Derived", "Custom TCS Upload"),
+                                                     #                               selected = "L1000 Derived", inline = TRUE),
+                                                     #                  conditionalPanel(condition = "input.Reference_L1000_or_Custom == 'L1000 Derived'",
+                                                     #                                   wellPanel(
+                                                     #                                     splitLayout(
+                                                     #                                       wellPanel(
+                                                     #                                         selectizeInput(inputId = "referenceCompound",
+                                                     #                                                        label = "Select reference compound (searchable...)",
+                                                     #                                                        choices = L1000_compounds,
+                                                     #                                                        selected = "alisertib",
+                                                     #                                                        multiple = F,
+                                                     #                                                        width = NULL,
+                                                     #                                                        size = NULL),
+                                                     #                                         # wellPanel(
+                                                     #                                         sliderInput(inputId = "sigMinCutoffRDS",
+                                                     #                                                     label = "Set visualization cutoff minimum:",
+                                                     #                                                     value = -1, min = -1, max = 1, step = 0.1),
+                                                     #                                         sliderInput(inputId = "sigMaxCutoffRDS",
+                                                     #                                                     label = "Set visualization cutoff maximum:",
+                                                     #                                                     value = 0, min = -1, max = 1, step = 0.1),
+                                                     #                                         sliderInput(inputId = "correlationCutoff_RDS", "correlationCutoff_RDS",
+                                                     #                                                     label = "Set sensitivity and resistance cut-offs [adjustable pseudodose]",
+                                                     #                                                     value = c(0, 0), min = -1, max = 1, step = 0.05)
+                                                     #                                         # )
+                                                     #                                       ),
+                                                     #                                       plotOutput(outputId = "refSignatureUMAPRDS")
+                                                     #                                     )
+                                                     #                                   ),
+                                                     #                                   wellPanel(
+                                                     #                                     plotOutput(outputId = "scSynergySeq1RDS")
+                                                     #                                   ),
+                                                     #                                   hr(),
+                                                     #                                   br(),
+                                                     #                                   wellPanel(
+                                                     #                                     splitLayout(
+                                                     #                                       textOutput("referenceCompound", ),
+                                                     #                                       actionButton("perturbationButton", label = "Run Perturbation Analysis", icon = icon("redo"))
+                                                     #                                     ),
+                                                     #                                     conditionalPanel(condition = "input.perturbationButton",
+                                                     #                                                      hr(),
+                                                     #                                                      h4("Success! Please navigate to the results tab."),
+                                                     #                                                      hr())
+                                                     #                                   )
+                                                     #                  ),
+                                                     #                  conditionalPanel(condition = "input.Reference_L1000_or_Custom =='Custom TCS Upload'",
+                                                     #                                   conditionalPanel(condition = "input.CalculateCustomTCSConnectivities",
+                                                     #                                                    # "custom TCS connectivites calculated!",
+                                                     #                                                    splitLayout(
+                                                     #                                                      wellPanel(sliderInput(inputId = "sigMinCutoff_customTCS",
+                                                     #                                                                            label = "Set visualization cutoff minimum:",
+                                                     #                                                                            value = -1, min = -1, max = 1, step = 0.1),
+                                                     #                                                                sliderInput(inputId = "sigMaxCutoff_customTCS",
+                                                     #                                                                            label = "Set visualization cutoff maximum:",
+                                                     #                                                                            value = 0, min = -1, max = 1, step = 0.1),
+                                                     #                                                                sliderInput(inputId = "correlationCutoff_customTCS", "correlationCutoff_customTCS",
+                                                     #                                                                            label = "Set sensitivity and resistance cut-offs [adjustable pseudodose]",
+                                                     #                                                                            value = c(0, 0), min = -1, max = 1, step = 0.05)),
+                                                     #                                                      wellPanel(plotOutput(outputId = "CustomRefSignatureUMAPRDS"))
+                                                     #                                                    ),
+                                                     #                                                    wellPanel(
+                                                     #                                                      plotOutput(outputId = "scSynergySeq_custTCS")),
+                                                     #                                                    hr(),
+                                                     #                                                    br(),
+                                                     #                                                    wellPanel(
+                                                     #                                                      splitLayout(
+                                                     #                                                        textOutput("referenceCompound_customTCS"),
+                                                     #                                                        actionButton("perturbationButton_customTCS", label = "Run Perturbation Analysis", icon = icon("redo"))
+                                                     #                                                      ),
+                                                     #                                                      conditionalPanel(condition = "input.perturbationButton_customTCS",
+                                                     #                                                                       hr(),
+                                                     #                                                                       h4("Success! Please navigate to the results tab."),
+                                                     #                                                                       hr()
+                                                     #
+                                                     #                                                      ),
+                                                     #                                                      conditionalPanel(condition = "input.perturbationButton_customTCS",
+                                                     #                                                                       downloadButton(outputId = "download_customTCS_sensitivityAssigner", label = "Download custom TCS sensitivity dataframe"),
+                                                     #                                                                       tabsetPanel(
+                                                     #                                                                         tabPanel("Resistance Signature",
+                                                     #                                                                                  wellPanel(
+                                                     #                                                                                    splitLayout(
+                                                     #                                                                                      wellPanel(
+                                                     #                                                                                        sliderInput(inputId = "cellSubsetMax_pert_customTCS",
+                                                     #                                                                                                    label = "Select number of cells per condition to test",
+                                                     #                                                                                                    min = 100, max = 40000, step = 100, value = 500
+                                                     #                                                                                        ),
+                                                     #                                                                                        selectizeInput(inputId = "pertDEx_testUse_customTCS",
+                                                     #                                                                                                       label = "Select differential expression test to use",
+                                                     #                                                                                                       choices = c("MAST", "roc", "wilcoxon", "deseq"),
+                                                     #                                                                                                       selected = "MAST"),
+                                                     #                                                                                        actionButton(inputId = "calcSensVsResistantDEGS_customTCS",
+                                                     #                                                                                                     label = "Run differential expression analysis"),
+                                                     #                                                                                        conditionalPanel(condition = "output.resVsSensCalced_customTCS",
+                                                     #                                                                                                         hr(),
+                                                     #                                                                                                         downloadButton(outputId = "resVsSensDEGSdownload_customTCS",
+                                                     #                                                                                                                        label = "Download differential expression results")
+                                                     #                                                                                        )
+                                                     #
+                                                     #                                                                                      ),
+                                                     #                                                                                      wellPanel(
+                                                     #                                                                                        plotOutput(outputId = "resVsSensVolcano_customTCS")
+                                                     #                                                                                      )
+                                                     #                                                                                    ),
+                                                     #                                                                                    DT::dataTableOutput(outputId = "resVsSensTable_customTCS")
+                                                     #                                                                                  )
+                                                     #                                                                         ),
+                                                     #                                                                         tabPanel("Proportion Shift"),
+                                                     #                                                                         tabPanel("Combination Scoring",
+                                                     #                                                                                  splitLayout(
+                                                     #                                                                                    wellPanel(
+                                                     #                                                                                      radioButtons(inputId = "customTCS_limmma_TREAT",
+                                                     #                                                                                                   label = "Utilize TREAT in limma to adjust null hypothesis?",
+                                                     #                                                                                                   choices = list("Yes", "No"),
+                                                     #                                                                                                   selected = "No"),
+                                                     #                                                                                      plotOutput(outputId = "customTCS_limmaVolc"),
+                                                     #                                                                                      downloadButton(outputId = "download_customTCS_limmaVolc", label = "Download volcano .pdf")
+                                                     #                                                                                    ),
+                                                     #                                                                                    wellPanel(
+                                                     #                                                                                      plotOutput(outputId = "customTCS_rcm_overall")
+                                                     #                                                                                    )
+                                                     #                                                                                  ),
+                                                     #                                                                                  wellPanel(
+                                                     #                                                                                    plotOutput(outputId = 'customTCS_combinationScoreBar'),
+                                                     #                                                                                    plotOutput(outputId = 'customTCS_CombinationHeatmap'),
+                                                     #                                                                                    plotOutput(outputId = "customTCS_CombinationHeatmap_2"),
+                                                     #                                                                                    actionButton(inputId = 'customTCS_combinationTableButton',
+                                                     #                                                                                                 label = "View data in table", icon = icon("table")),
+                                                     #                                                                                    downloadButton(outputId = "combinationScoreDownload_customTCS",
+                                                     #                                                                                                   label = "Download Combination Scoring Results Table")
+                                                     #                                                                                  )
+                                                     #
+                                                     #                                                                         )
+                                                     #                                                                       )) # end tabset
+                                                     #                                                    )
+                                                     #                                   ),
+                                                     #                                   conditionalPanel(condition = "input.CalculateCustomTCSConnectivities == 0",
+                                                     #                                                    "custom TCS connectivities not yet calculated, circle back...")
+                                                     #                  )# ,
+                                                     #
+                                                     #
+                                                     #
+                                                     #
+                                                     # )
                                                      # textOutput('finalMatrixText')
                                                      # sliderInput(inputId = "cellSubsetMax_1",
                                                      #             label = "Select number of cells per condition to test",
@@ -419,13 +835,12 @@ ui <- fluidPage(
                                                      # )
                                                    )
 
-                                  )
-
+                                  ) ################################################################################################################################################################### < End of controls uploaded conditional Panel...
                  )
                  ),
                  tabPanel(tags$div(
                    tags$i(class = "fa-sharp fa-solid fa-magnifying-glass-chart"),
-                   tags$span("5. Results"),
+                   tags$span("5. In Silico Perturbation"), # NEED TO UPDATE CONDITIONS SO THAT RESULTS ARE ONLY PLOTTED UNDER L1000 or CUSTOM from radio buttons...
                    tags$style(type = "text/css", "li a{color:#000000; font-samily: 'sans-serif', Arial Rounded MT Bold;}")
                  ),
                  # results section here
@@ -448,68 +863,462 @@ ui <- fluidPage(
                                                    hr()
                                   ),
                                   conditionalPanel(condition = "output.controlsSelected",
-                                                   # what goes next here?
-                                                   conditionalPanel(condition = "input.perturbationButton == 0",
-                                                                    "not pressed"
-                                                   ),
-                                                   conditionalPanel(condition = "input.perturbationButton != 0",
-                                                                    h4("Explore predicted expression and pharmacotranscriptomic effects"),
-                                                                    hr(),
-                                                                    tabsetPanel(
-                                                                      tabPanel("Gene expression",
-                                                                               wellPanel(
-                                                                                 splitLayout(
-                                                                                   wellPanel(
-                                                                                     sliderInput(inputId = "cellSubsetMax_pert",
-                                                                                                 label = "Select number of cells per condition to test",
-                                                                                                 min = 100, max = 40000, step = 100, value = 500
-                                                                                     ),
-                                                                                     selectizeInput(inputId = "pertDEx_testUse", label = "Select differential expression test to use", choices = c("MAST", "roc", "wilcoxon", "deseq"), selected = "MAST"),
-                                                                                     actionButton(inputId = "calcSensVsResistantDEGS", label = "Run differential expression analysis"),
-                                                                                     conditionalPanel(condition = "output.resVsSensCalced",
-                                                                                                      hr(),
-                                                                                                      downloadButton(outputId = "resVsSensDEGSdownload", label = "Download differential expression results")
-                                                                                     )
+                                                   hr(),
+                                                   h4("'Treat' your dataset to characterize sensitive and resistant cell populations"),
+                                                   br(),
+                                                   tabsetPanel(
+                                                     tabPanel(tags$div(
+                                                       tags$i(class = "fa-sharp fa-solid fa-magnifying-glass-chart"),
+                                                       tags$span("Initialize Perturbation Experiment"), # NEED TO UPDATE CONDITIONS SO THAT RESULTS ARE ONLY PLOTTED UNDER L1000 or CUSTOM from radio buttons...
+                                                       tags$style(type = "text/css", "li a{color:#000000; font-samily: 'sans-serif', Arial Rounded MT Bold;}")
+                                                     ),
+                                                     #Setup in here!
+                                                     tags$hr(style = "border-top: 3px solid black;"),
+                                                     conditionalPanel(condition = "output.corrMatrixCalculated || output.corrMatUploaded",
+                                                                      h4("Step 1: Select reference compound and set parameters."),
+                                                                      br(),
+                                                                      radioButtons(inputId = "Reference_L1000_or_Custom",
+                                                                                   label = "Step 1.1: L1000 or Custom TCS?",
+                                                                                   choices = list("L1000 Derived", "Custom TCS Upload"),
+                                                                                   selected = "L1000 Derived", inline = TRUE),
+                                                                      conditionalPanel(condition = "input.Reference_L1000_or_Custom == 'L1000 Derived'", # L1000
+                                                                                       wellPanel(
+                                                                                         splitLayout(
+                                                                                           wellPanel(
+                                                                                             selectizeInput(inputId = "referenceCompound",
+                                                                                                            label = "Select reference compound",
+                                                                                                            choices = L1000_compounds,
+                                                                                                            selected = "alisertib",
+                                                                                                            multiple = F,
+                                                                                                            width = NULL,
+                                                                                                            size = NULL),
+                                                                                             # wellPanel(
+                                                                                             sliderInput(inputId = "sigMinCutoffRDS",
+                                                                                                         label = "Set visualization cutoff minimum:",
+                                                                                                         value = -1, min = -1, max = 1, step = 0.1),
+                                                                                             sliderInput(inputId = "sigMaxCutoffRDS",
+                                                                                                         label = "Set visualization cutoff maximum:",
+                                                                                                         value = 0, min = -1, max = 1, step = 0.1),
+                                                                                             sliderInput(inputId = "correlationCutoff_RDS", "correlationCutoff_RDS",
+                                                                                                         label = "Set sensitivity and resistance cut-offs [adjustable pseudodose]",
+                                                                                                         value = c(0, 0), min = -1, max = 1, step = 0.05)
+                                                                                             # )
+                                                                                           ),
+                                                                                           plotOutput(outputId = "refSignatureUMAPRDS")
+                                                                                         )
+                                                                                       ),
+                                                                                       # wellPanel(
+                                                                                       plotOutput(outputId = "scSynergySeq1RDS"),
+                                                                                       # ),
+                                                                                       # hr(),
+                                                                                       # br(),
+                                                                                       wellPanel(
+                                                                                         splitLayout(
+                                                                                           wellPanel(
+                                                                                             h4("Step 2: In Silico Perturbation"),
+                                                                                             textOutput("referenceCompound")
+                                                                                           ),
+                                                                                           wellPanel(
+                                                                                             h4(),
+                                                                                             actionButton("perturbationButton", label = "Run Perturbation Analysis", icon = icon("redo"))
+                                                                                           )
+                                                                                         ),
+                                                                                         conditionalPanel(condition = "input.perturbationButton",
+                                                                                                          hr(),
+                                                                                                          h4("Success! Please navigate to the results tab."),
+                                                                                                          hr())
+                                                                                       )
+                                                                      ),
+                                                                      conditionalPanel(condition = "input.Reference_L1000_or_Custom =='Custom TCS Upload'", # CUSTOM
+                                                                                       conditionalPanel(condition = "input.CalculateCustomTCSConnectivities",
+                                                                                                        # "custom TCS connectivites calculated!",
+                                                                                                        splitLayout(
+                                                                                                          wellPanel(sliderInput(inputId = "sigMinCutoff_customTCS",
+                                                                                                                                label = "Set visualization cutoff minimum:",
+                                                                                                                                value = -1, min = -1, max = 1, step = 0.1),
+                                                                                                                    sliderInput(inputId = "sigMaxCutoff_customTCS",
+                                                                                                                                label = "Set visualization cutoff maximum:",
+                                                                                                                                value = 0, min = -1, max = 1, step = 0.1),
+                                                                                                                    sliderInput(inputId = "correlationCutoff_customTCS", "correlationCutoff_customTCS",
+                                                                                                                                label = "Set sensitivity and resistance cut-offs [adjustable pseudodose]",
+                                                                                                                                value = c(0, 0), min = -1, max = 1, step = 0.05)),
+                                                                                                          wellPanel(plotOutput(outputId = "CustomRefSignatureUMAPRDS"))
+                                                                                                        ),
+                                                                                                        wellPanel(
+                                                                                                          plotOutput(outputId = "scSynergySeq_custTCS")),
+                                                                                                        # hr(),
+                                                                                                        # br(),
+                                                                                                        wellPanel(
+                                                                                                          splitLayout(
+                                                                                                            textOutput("referenceCompound_customTCS"),
+                                                                                                            actionButton("perturbationButton_customTCS", label = "Run Perturbation Analysis", icon = icon("redo"))
+                                                                                                          ),
+                                                                                                          conditionalPanel(condition = "input.perturbationButton_customTCS",
+                                                                                                                           hr(),
+                                                                                                                           h4("Success! Please navigate to the results tab."),
+                                                                                                                           hr()
 
+                                                                                                          ) # ,
+                                                                                                          # conditionalPanel(condition = "input.perturbationButton_customTCS",
+                                                                                                          #                  downloadButton(outputId = "download_customTCS_sensitivityAssigner", label = "Download custom TCS sensitivity dataframe"),
+                                                                                                          #                  tabsetPanel(
+                                                                                                          #                    tabPanel("Resistance Signature",
+                                                                                                          #                             wellPanel(
+                                                                                                          #                               splitLayout(
+                                                                                                          #                                 wellPanel(
+                                                                                                          #                                   sliderInput(inputId = "cellSubsetMax_pert_customTCS",
+                                                                                                          #                                               label = "Select number of cells per condition to test",
+                                                                                                          #                                               min = 100, max = 40000, step = 100, value = 500
+                                                                                                          #                                   ),
+                                                                                                          #                                   selectizeInput(inputId = "pertDEx_testUse_customTCS",
+                                                                                                          #                                                  label = "Select differential expression test to use",
+                                                                                                          #                                                  choices = c("MAST", "roc", "wilcoxon", "deseq"),
+                                                                                                          #                                                  selected = "MAST"),
+                                                                                                          #                                   actionButton(inputId = "calcSensVsResistantDEGS_customTCS",
+                                                                                                          #                                                label = "Run differential expression analysis"),
+                                                                                                          #                                   conditionalPanel(condition = "output.resVsSensCalced_customTCS",
+                                                                                                          #                                                    hr(),
+                                                                                                          #                                                    downloadButton(outputId = "resVsSensDEGSdownload_customTCS",
+                                                                                                          #                                                                   label = "Download differential expression results")
+                                                                                                          #                                   )
+                                                                                                          #
+                                                                                                          #                                 ),
+                                                                                                          #                                 wellPanel(
+                                                                                                          #                                   plotOutput(outputId = "resVsSensVolcano_customTCS")
+                                                                                                          #                                 )
+                                                                                                          #                               ),
+                                                                                                          #                               DT::dataTableOutput(outputId = "resVsSensTable_customTCS")
+                                                                                                          #                             )
+                                                                                                          #                    ),
+                                                                                                          #                    tabPanel("Proportion Shift"),
+                                                                                                          #                    tabPanel("Combination Scoring",
+                                                                                                          #                             splitLayout(
+                                                                                                          #                               wellPanel(
+                                                                                                          #                                 radioButtons(inputId = "customTCS_limmma_TREAT",
+                                                                                                          #                                              label = "Utilize TREAT in limma to adjust null hypothesis?",
+                                                                                                          #                                              choices = list("Yes", "No"),
+                                                                                                          #                                              selected = "No"),
+                                                                                                          #                                 plotOutput(outputId = "customTCS_limmaVolc"),
+                                                                                                          #                                 downloadButton(outputId = "download_customTCS_limmaVolc", label = "Download volcano .pdf")
+                                                                                                          #                               ),
+                                                                                                          #                               wellPanel(
+                                                                                                          #                                 plotOutput(outputId = "customTCS_rcm_overall")
+                                                                                                          #                               )
+                                                                                                          #                             ),
+                                                                                                          #                             wellPanel(
+                                                                                                          #                               plotOutput(outputId = 'customTCS_combinationScoreBar'),
+                                                                                                          #                               plotOutput(outputId = 'customTCS_CombinationHeatmap'),
+                                                                                                          #                               plotOutput(outputId = "customTCS_CombinationHeatmap_2"),
+                                                                                                          #                               actionButton(inputId = 'customTCS_combinationTableButton',
+                                                                                                          #                                            label = "View data in table", icon = icon("table")),
+                                                                                                          #                               downloadButton(outputId = "combinationScoreDownload_customTCS",
+                                                                                                          #                                              label = "Download Combination Scoring Results Table")
+                                                                                                          #                             )
+                                                                                                          #
+                                                                                                          #                    )
+                                                                                                          #                  )) # end tabset ###############################################################################################################
+                                                                                                        )
+                                                                                       ),
+                                                                                       conditionalPanel(condition = "input.CalculateCustomTCSConnectivities == 0",
+                                                                                                        "custom TCS connectivities not yet calculated, please return to the 'Cell-Drug Connectivity' Tab.")
+                                                                             )# ,
+
+
+
+
+                                                                      )
+
+                                                     ),
+                                                     tabPanel(tags$div(
+                                                       tags$i(class = "fa-sharp fa-solid fa-magnifying-glass-chart"),
+                                                       tags$span("Results and Analysis"), # NEED TO UPDATE CONDITIONS SO THAT RESULTS ARE ONLY PLOTTED UNDER L1000 or CUSTOM from radio buttons...
+                                                       tags$style(type = "text/css", "li a{color:#000000; font-samily: 'sans-serif', Arial Rounded MT Bold;}")
+                                                     ),
+                                                     # Results in here!
+                                                     conditionalPanel(condition = "input.perturbationButton == 0",
+                                                                      hr()
+                                                                      # "not pressed"
+                                                     ),
+                                                     conditionalPanel(condition = "input.perturbationButton != 0",
+                                                                      br(),
+                                                                      h4("L1000 TCS Result: "),
+                                                                      hr(),
+                                                                      tabsetPanel(
+                                                                        tabPanel("Resistance Signature",
+                                                                                 wellPanel(
+                                                                                   splitLayout(
+                                                                                     wellPanel(
+                                                                                       sliderInput(inputId = "cellSubsetMax_pert",
+                                                                                                   label = "Select number of cells per condition to test",
+                                                                                                   min = 100, max = 40000, step = 100, value = 500
+                                                                                       ),
+                                                                                       selectizeInput(inputId = "pertDEx_testUse",
+                                                                                                      label = "Select differential expression test to use",
+                                                                                                      choices = c("MAST", "roc", "wilcoxon", "deseq"),
+                                                                                                      selected = "MAST"),
+                                                                                       actionButton(inputId = "calcSensVsResistantDEGS",
+                                                                                                    label = "Run differential expression analysis"),
+                                                                                       conditionalPanel(condition = "output.resVsSensCalced",
+                                                                                                        hr(),
+                                                                                                        downloadButton(outputId = "resVsSensDEGSdownload",
+                                                                                                                       label = "Download differential expression results")
+                                                                                       )
+
+                                                                                     ),
+                                                                                     wellPanel(
+                                                                                       plotOutput(outputId = "resVsSensVolcano")
+                                                                                     )
+                                                                                   ),
+                                                                                   DT::dataTableOutput(outputId = "resVsSensTable")
+                                                                                 )
+                                                                        ),
+                                                                        tabPanel("Proportion shift",
+                                                                                 # sliderInput(inputId = "nCompoundSlider_RDS",
+                                                                                 #             label = "Select number of compounds to visualize",
+                                                                                 #             value = 30, min = 1, max = 1468, step = 1),
+                                                                                 # plotOutput(outputId = "scSynergySeq2_RDS")
+                                                                                 wellPanel(
+                                                                                   splitLayout(
+                                                                                     plotOutput(outputId = "scFOCAL_StateShiftAlluvial") #,
+                                                                                     # "Plot of normalized shift here"
                                                                                    ),
                                                                                    wellPanel(
-                                                                                     plotOutput(outputId = "resVsSensVolcano")
+                                                                                     # "Plot of normalized shift here",
+                                                                                     # DT::dataTableOutput("optimal_quantiles_output_customTCS"),
+                                                                                     sliderInput(
+                                                                                       inputId = "quantile_slider",
+                                                                                       label = "Select Quantile Cutoff (%):",
+                                                                                       min = 5,
+                                                                                       max = 45,
+                                                                                       value = 20, # Sets the default starting value
+                                                                                       step = 5
+                                                                                     ),
+                                                                                     wellPanel(
+                                                                                       style = "height: 1000px;",
+                                                                                       plotOutput("main_plot", height = "100%")
+                                                                                     )
+                                                                                   )
+                                                                                 )
+                                                                        ),
+                                                                        tabPanel("Combination Scoring",
+                                                                                 # "Under Construction!",
+                                                                                 splitLayout(
+                                                                                   wellPanel(
+                                                                                     # radioButtons(inputId = "limmma_TREAT",
+                                                                                     #              label = "Utilize TREAT in limma to adjust null hypothesis?",
+                                                                                     #              choices = list("Yes", "No"),
+                                                                                     #              selected = "No"),
+                                                                                     plotOutput(outputId = "l1000in_limmaVolc"),
+                                                                                     downloadButton(outputId = "download_limmaVolc", label = "Download volcano .pdf")
+                                                                                   ),
+                                                                                   wellPanel(
+                                                                                     plotOutput(outputId = "rcm_overall")
                                                                                    )
                                                                                  ),
-                                                                                 DT::dataTableOutput(outputId = "resVsSensTable")
-                                                                               )
-                                                                      ),
-                                                                      tabPanel("Pharmacotranscriptomics",
-                                                                               wellPanel(
-                                                                                 splitLayout(
-                                                                                   wellPanel(
-                                                                                     sliderInput(inputId = "synergyPredictorSlider",
-                                                                                                 label = "select number of compounds to label",
-                                                                                                 value = 30, min = 1, max = 1468, step = 1),
+                                                                                 wellPanel(
+                                                                                   # "Under Construction!"
+                                                                                   plotOutput(outputId = 'combinationScoreBar'),
+                                                                                   # plotOutput(outputId = 'CombinationHeatmap'),
+                                                                                   # plotOutput(outputId = "CombinationHeatmap_2"),
+                                                                                   actionButton(inputId = 'combinationTableButton',
+                                                                                                label = "View data in table", icon = icon("table")),
+                                                                                   downloadButton(outputId = "combinationScoreDownload",
+                                                                                                  label = "Download Combination Scoring Results Table")
+                                                                                 )
+                                                                        )
+                                                                      )
+                                                          ),
+                                                     conditionalPanel(condition = "input.perturbationButton_customTCS",
+                                                                      hr(),
+                                                                      h4("Custom TCS Result"),
+                                                                      hr(),
+                                                                      downloadButton(outputId = "download_customTCS_sensitivityAssigner", label = "Download custom TCS sensitivity dataframe"),
+                                                                      hr(),
+                                                                      tabsetPanel(
+                                                                        tabPanel("Resistance Signature",
+                                                                                 wellPanel(
+                                                                                   splitLayout(
+                                                                                     wellPanel(
+                                                                                       sliderInput(inputId = "cellSubsetMax_pert_customTCS",
+                                                                                                   label = "Select number of cells per condition to test",
+                                                                                                   min = 100, max = 40000, step = 100, value = 500
+                                                                                       ),
+                                                                                       selectizeInput(inputId = "pertDEx_testUse_customTCS",
+                                                                                                      label = "Select differential expression test to use",
+                                                                                                      choices = c("MAST", "roc", "wilcoxon", "deseq"),
+                                                                                                      selected = "MAST"),
+                                                                                       actionButton(inputId = "calcSensVsResistantDEGS_customTCS",
+                                                                                                    label = "Run differential expression analysis"),
+                                                                                       conditionalPanel(condition = "output.resVsSensCalced_customTCS",
+                                                                                                        hr(),
+                                                                                                        downloadButton(outputId = "resVsSensDEGSdownload_customTCS",
+                                                                                                                       label = "Download differential expression results")
+                                                                                       )
+
+                                                                                     ),
+                                                                                     wellPanel(
+                                                                                       plotOutput(outputId = "resVsSensVolcano_customTCS")
+                                                                                     )
+                                                                                   ),
+                                                                                   DT::dataTableOutput(outputId = "resVsSensTable_customTCS")
+                                                                                 )
+                                                                        ),
+                                                                        tabPanel("Proportion Shift",
+                                                                                 # scFOCAL_StateShiftAlluvial_customTCS
+                                                                                 wellPanel(
+                                                                                   splitLayout(
+                                                                                     wellPanel(
+                                                                                       plotOutput(outputId = "scFOCAL_StateShiftAlluvial_customTCS")
+                                                                                     ),
+                                                                                     wellPanel(
+                                                                                       # style = "height: 300px;",
+                                                                                       # "What goes here?" # ,
+                                                                                       # plotOutput("main_plot_userSet_customTCS", height = "100%")
+                                                                                     )
+                                                                                    )
+                                                                                 ),
+                                                                                 wellPanel(
+                                                                                   # "Plot of normalized shift here",
+                                                                                   # DT::dataTableOutput("optimal_quantiles_output_customTCS"),
+                                                                                   sliderInput(
+                                                                                     inputId = "quantile_slider_customTCS",
+                                                                                     label = "Select Quantile Cutoff (%):",
+                                                                                     min = 5,
+                                                                                     max = 45,
+                                                                                     value = 20, # Sets the default starting value
+                                                                                     step = 5
                                                                                    ),
                                                                                    wellPanel(
-                                                                                     h4("How to interpret this plot:"),
-                                                                                     img(src = "perturbationCompoundFigure.png", width = 350, height = 130),
-                                                                                     hr()
+                                                                                     style = "height: 1000px;",
+                                                                                     plotOutput("main_plot_customTCS", height = "100%")
                                                                                    )
-                                                                                 )
-                                                                               ),
-                                                                               plotOutput(outputId = "scSynergySeq3_RDS")
-                                                                      ),
-                                                                      tabPanel("Proportion shift",
-                                                                               # sliderInput(inputId = "nCompoundSlider_RDS",
-                                                                               #             label = "Select number of compounds to visualize",
-                                                                               #             value = 30, min = 1, max = 1468, step = 1),
-                                                                               # plotOutput(outputId = "scSynergySeq2_RDS")
-                                                                               wellPanel(
+                                                                                   )
+                                                                                 ),
+                                                                        tabPanel("Combination Scoring",
+                                                                                 hr("Rank L1000 Small Molecules for combination with your reference drug using the scFOCAL combination index."),
                                                                                  splitLayout(
-                                                                                   plotOutput(outputId = "ISOSCELES_StateShiftAlluvial"),
-                                                                                   "Plot of normalized shift here"
+                                                                                   wellPanel(
+                                                                                     # radioButtons(inputId = "customTCS_limmma_TREAT",
+                                                                                     #              label = "Utilize TREAT in limma to adjust null hypothesis?",
+                                                                                     #              choices = list("Yes", "No"),
+                                                                                     #              selected = "No"),
+                                                                                     plotOutput(outputId = "customTCS_limmaVolc"),
+                                                                                     downloadButton(outputId = "download_customTCS_limmaVolc", label = "Download volcano .pdf")
+                                                                                   ),
+                                                                                   wellPanel(
+                                                                                     plotOutput(outputId = "customTCS_rcm_overall")
+                                                                                   )
+                                                                                 ),
+                                                                                 wellPanel(
+                                                                                   # add scatterplot as in paper here.
+                                                                                   plotOutput(outputId = 'customTCS_combinationScoreBar'), # move to right side of new splitLayout
+                                                                                   # plotOutput(outputId = 'customTCS_CombinationHeatmap'),
+                                                                                   # plotOutput(outputId = "customTCS_CombinationHeatmap_2"),
+                                                                                   actionButton(inputId = 'customTCS_combinationTableButton',
+                                                                                                label = "View data in table", icon = icon("table")),
+                                                                                   downloadButton(outputId = "combinationScoreDownload_customTCS",
+                                                                                                  label = "Download Combination Scoring Results Table")
                                                                                  )
-                                                                               )
-                                                                      )
-                                                                    )
-                                                   )
+
+                                                                        )
+                                                                      ))
+
+                                                     )
+                                                   ),
+
+                                                   # conditionalPanel(condition = "input.Reference_L1000_or_Custom =='Custom TCS Upload'",
+                                                   #                  conditionalPanel(condition = "input.CalculateCustomTCSConnectivities",
+                                                   #                                   # "custom TCS connectivites calculated!",
+                                                   #                                   splitLayout(
+                                                   #                                     wellPanel(sliderInput(inputId = "sigMinCutoff_customTCS",
+                                                   #                                                           label = "Set visualization cutoff minimum:",
+                                                   #                                                           value = -1, min = -1, max = 1, step = 0.1),
+                                                   #                                               sliderInput(inputId = "sigMaxCutoff_customTCS",
+                                                   #                                                           label = "Set visualization cutoff maximum:",
+                                                   #                                                           value = 0, min = -1, max = 1, step = 0.1),
+                                                   #                                               sliderInput(inputId = "correlationCutoff_customTCS", "correlationCutoff_customTCS",
+                                                   #                                                           label = "Set sensitivity and resistance cut-offs [adjustable pseudodose]",
+                                                   #                                                           value = c(0, 0), min = -1, max = 1, step = 0.05)),
+                                                   #                                     wellPanel(plotOutput(outputId = "CustomRefSignatureUMAPRDS"))
+                                                   #                                   ),
+                                                   #                                   wellPanel(
+                                                   #                                     plotOutput(outputId = "scSynergySeq_custTCS")),
+                                                   #                                   hr(),
+                                                   #                                   br(),
+                                                   #                                   wellPanel(
+                                                   #                                     splitLayout(
+                                                   #                                       textOutput("referenceCompound_customTCS"),
+                                                   #                                       actionButton("perturbationButton_customTCS", label = "Run Perturbation Analysis", icon = icon("redo"))
+                                                   #                                     ),
+                                                   #                                     conditionalPanel(condition = "input.perturbationButton_customTCS",
+                                                   #                                                      hr(),
+                                                   #                                                      h4("Success! Please navigate to the results tab."),
+                                                   #                                                      hr()
+                                                   #
+                                                   #                                     ),
+                                                   #                                     conditionalPanel(condition = "input.perturbationButton_customTCS",
+                                                   #                                                      downloadButton(outputId = "download_customTCS_sensitivityAssigner", label = "Download custom TCS sensitivity dataframe"),
+                                                   #                                                      tabsetPanel(
+                                                   #                                                        tabPanel("Resistance Signature",
+                                                   #                                                                 wellPanel(
+                                                   #                                                                   splitLayout(
+                                                   #                                                                     wellPanel(
+                                                   #                                                                       sliderInput(inputId = "cellSubsetMax_pert_customTCS",
+                                                   #                                                                                   label = "Select number of cells per condition to test",
+                                                   #                                                                                   min = 100, max = 40000, step = 100, value = 500
+                                                   #                                                                       ),
+                                                   #                                                                       selectizeInput(inputId = "pertDEx_testUse_customTCS",
+                                                   #                                                                                      label = "Select differential expression test to use",
+                                                   #                                                                                      choices = c("MAST", "roc", "wilcoxon", "deseq"),
+                                                   #                                                                                      selected = "MAST"),
+                                                   #                                                                       actionButton(inputId = "calcSensVsResistantDEGS_customTCS",
+                                                   #                                                                                    label = "Run differential expression analysis"),
+                                                   #                                                                       conditionalPanel(condition = "output.resVsSensCalced_customTCS",
+                                                   #                                                                                        hr(),
+                                                   #                                                                                        downloadButton(outputId = "resVsSensDEGSdownload_customTCS",
+                                                   #                                                                                                       label = "Download differential expression results")
+                                                   #                                                                       )
+                                                   #
+                                                   #                                                                     ),
+                                                   #                                                                     wellPanel(
+                                                   #                                                                       plotOutput(outputId = "resVsSensVolcano_customTCS")
+                                                   #                                                                     )
+                                                   #                                                                   ),
+                                                   #                                                                   DT::dataTableOutput(outputId = "resVsSensTable_customTCS")
+                                                   #                                                                 )
+                                                   #                                                        ),
+                                                   #                                                        tabPanel("Proportion Shift"),
+                                                   #                                                        tabPanel("Combination Scoring",
+                                                   #                                                                 splitLayout(
+                                                   #                                                                   wellPanel(
+                                                   #                                                                     radioButtons(inputId = "customTCS_limmma_TREAT",
+                                                   #                                                                                  label = "Utilize TREAT in limma to adjust null hypothesis?",
+                                                   #                                                                                  choices = list("Yes", "No"),
+                                                   #                                                                                  selected = "No"),
+                                                   #                                                                     plotOutput(outputId = "customTCS_limmaVolc"),
+                                                   #                                                                     downloadButton(outputId = "download_customTCS_limmaVolc", label = "Download volcano .pdf")
+                                                   #                                                                   ),
+                                                   #                                                                   wellPanel(
+                                                   #                                                                     plotOutput(outputId = "customTCS_rcm_overall")
+                                                   #                                                                   )
+                                                   #                                                                 ),
+                                                   #                                                                 wellPanel(
+                                                   #                                                                   plotOutput(outputId = 'customTCS_combinationScoreBar'),
+                                                   #                                                                   plotOutput(outputId = 'customTCS_CombinationHeatmap'),
+                                                   #                                                                   plotOutput(outputId = "customTCS_CombinationHeatmap_2"),
+                                                   #                                                                   actionButton(inputId = 'customTCS_combinationTableButton',
+                                                   #                                                                                label = "View data in table", icon = icon("table")),
+                                                   #                                                                   downloadButton(outputId = "combinationScoreDownload_customTCS",
+                                                   #                                                                                  label = "Download Combination Scoring Results Table")
+                                                   #                                                                 )
+                                                   #
+                                                   #                                                        )
+                                                   #                                                      )) # end tabset
+                                                   #                                   )
+                                                   #                  ),
+                                                   #                  conditionalPanel(condition = "input.CalculateCustomTCSConnectivities == 0",
+                                                   #                                   "custom TCS connectivities not yet calculated, circle back...")
+                                                   # )
                                   )
                  )
                  )
@@ -523,7 +1332,7 @@ ui <- fluidPage(
                h1(strong("Tutorials")),
                hr(),
                br(),
-               p(strong("Welcome to ISOSCELES! This tutorial will walk you through the ISOSCELES workflow.")),
+               p(strong("Welcome to scFOCAL! This tutorial will walk you through the scFOCAL workflow.")),
                h2(strong("Data Upload")),
                p("Upload data as a Seurat object that contains expression data from RNAseq. File format should be .RDS or .rds. Please wait for a success message before moving to Step 2.
                  This may take a few minutes."
@@ -559,14 +1368,14 @@ ui <- fluidPage(
                  tags$i(class = "fa-brands fa-github"),
                  tags$span("- Install R Package")
                ), # put contents for R package installation here
-               h1("ISOSCELES R Package"),
+               h1("scFOCAL R Package"),
                hr(),
                br(),
-               p(strong("Due to the likely large size of many single-cell RNA seq datasets, the ISOSCELES shiny app is locally deployable via the ISOSCELES R Package. Please read the license agreement below and agree to access install instructions.")),
+               p(strong("Due to the likely large size of many single-cell RNA seq datasets, the scFOCAL shiny app is locally deployable via the scFOCAL R Package. Please read the license agreement below and agree to access install instructions.")),
                h1("License Agreement"),
                # hr(),
                br(), # Note this is a draft... I dont know if this is right. Not a lawyer!
-               p(strong("1. The Board of Trustees of the Georgetown University (“Georgetown”) provides ISOSCELES software and code (“Service”) free of charge for non-commercial use only. Use of the Service by any commercial entity for any purpose, including research, is prohibited.")),
+               p(strong("1. The Board of Trustees of the Georgetown University (“Georgetown”) provides scFOCAL software and code (“Service”) free of charge for non-commercial use only. Use of the Service by any commercial entity for any purpose, including research, is prohibited.")),
                p(strong("2. By using the Service, you agree to be bound by the terms of this Agreement. Please read it carefully.")),
                p(strong("3. You agree not to use the Service for commercial advantage, or in the course of for-profit activities. You agree not to use the Service on behalf of any organization that is not a non-profit organization. Commercial entities wishing to use this Service should contact Georgetown University’s Office of Technology Licensing.")),
                p(strong("4. THE SERVICE IS OFFERED “AS IS”, AND, TO THE EXTENT PERMITTED BY LAW, GEORGETOWN MAKES NO REPRESENTATIONS AND EXTENDS NO WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED. GEORGETOWN SHALL NOT BE LIABLE FOR ANY CLAIMS OR DAMAGES WITH RESPECT TO ANY LOSS OR OTHER CLAIM BY YOU OR ANY THIRD PARTY ON ACCOUNT OF, OR ARISING FROM THE USE OF THE SERVICE. YOU HEREBY AGREE TO DEFEND AND INDEMNIFY GEORGETOWN, ITS TRUSTEES, EMPLOYEES, OFFICERS, STUDENTS, AGENTS, FACULTY, REPRESENTATIVES, AND VOLUNTEERS (“GEORGETOWN INDEMNITEES”) FROM ANY LOSS OR CLAIM ASSERTED AGAINST GEORGETOWN INDEMNITEES ARISING FROM YOUR USE OF THE SERVICE.")),
@@ -583,13 +1392,13 @@ ui <- fluidPage(
                br(),
                conditionalPanel(condition = "input.acceptAgreement",
                                 p(strong("Thank You!")),
-                                h2("How to install the ISOSCELES R package"),
-                                p(strong("The ISOSCELES R Package can be installed from github using devtools.")),
-                                p(code("devtools::install_github('AyadLab/ISOSCELES')")),
-                                p(strong("Once installed, load the ISOSCELES library.")),
-                                p(code("library(ISOSCELES)")),
-                                p(strong("Launch the ISOSCELES shiny UI using the RunISOSCELES() function.")),
-                                p(code("ISOSCELES::runISOSCELES()"))
+                                h2("How to install the scFOCAL R package"),
+                                p(strong("The scFOCAL R Package can be installed from github using devtools.")),
+                                p(code("devtools::install_github('AyadLab/scFOCAL')")),
+                                p(strong("Once installed, load the scFOCAL library.")),
+                                p(code("library(scFOCAL)")),
+                                p(strong("Launch the scFOCAL shiny UI using the RunscFOCAL() function.")),
+                                p(code("scFOCAL::runscFOCAL()"))
                )
                ),
 
@@ -626,17 +1435,21 @@ ui <- fluidPage(
                tabPanel(tags$div(
                  tags$i(class="fa-sharp fa-solid fa-envelope"),
                  tags$span("- Contact")
-               ), #put contents for Contact here #isosceles.app@gmail.com
+               ), #put contents for Contact here #scFOCAL.app@gmail.com
                splitLayout(
                  wellPanel(
                    # hr(),
                    br(),
                    p(strong("Robert K. Suter, PhD")),
-                   p(em("Bioinformatician")),
+                   p(em("Assistant Professor")),
+                   p(em("Department of Oncology")),
+                   p(em("Lombardi Comprehensive Cancer Center")),
+                   p(em("Georgetown University Medical Center")),
                    hr(),
                    img(src = "rks_headshot_2022.png", width = 185, height = 160),
                    br(), br(),
                    a(href="mailto:rks82@georgetown.edu", "Contact..."),
+                   a(href="https://suterlab.com", "SuterLab.com"),
                    hr()
                  ),
                  wellPanel(

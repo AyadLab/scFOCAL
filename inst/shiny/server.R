@@ -22,57 +22,71 @@ library(scales)
 library(ggforce)
 library(EnhancedVolcano)
 library(DT)
+library(lme4)
+library(edgeR)
+library(ggpubr)
+library(stringr)
+library(viridis)
+library(ComplexHeatmap)
 
 server <- function(input, output) {
 
-  # Can we make a dynamic switch that picks metadata column to group by
-  # in dimplot? Can also be used for many other useful things, like which
-  # column to cluster and calculate disease signatures by.
-
-  # seurobjRDS
-  #<<<<<<< HEAD
-  #rdsSeurat <- eventReactive(input$seurobjRDS {
-  # if(is.null(rdsSeurat)) return (NULL)
-  #infile <- input$seurobjRDS
-  #readRDS(infile$datapath)
-  #})
-
-################################################################################
-# testing
-################################################################################
-
   # L1000 data as reactive
   L1000_genes <- reactive({
-    # LINCS.ResponseSigs <- read.delim(
-    #   file = "matPH3_2_1_0.2_0.3_L1000_Batch2017_Regina_removed.txt", header = T)
-    # row.names(LINCS.ResponseSigs) <- LINCS.ResponseSigs$Genes
-    # LINCS.ResponseSigs <- na.omit(LINCS.ResponseSigs)
-    # newNames <- gsub("-", ".", rownames(LINCS.ResponseSigs))
-    # rownames(LINCS.ResponseSigs) <- newNames
-    # colnames(LINCS.ResponseSigs)
-    # # L1000_compounds <- rownames(LINCS.ResponseSigs)
-    colnames(get0("LINCS.ResponseSigs", envir = asNamespace("ISOSCELES")))
+    colnames(get0("LINCS.ResponseSigs", envir = asNamespace("scFOCAL")))
   })
 
   LINCS.ResponseSigs <- reactive({
-    # LINCS.ResponseSigs <- read.delim(
-    #   file = "matPH3_2_1_0.2_0.3_L1000_Batch2017_Regina_removed.txt", header = T)
-    # row.names(LINCS.ResponseSigs) <- LINCS.ResponseSigs$Genes
-    # LINCS.ResponseSigs <- na.omit(LINCS.ResponseSigs)
-    # newNames <- gsub("-", ".", rownames(LINCS.ResponseSigs))
-    # rownames(LINCS.ResponseSigs) <- newNames
-    # LINCS.ResponseSigs
-    get0("LINCS.ResponseSigs", envir = asNamespace("ISOSCELES"))
+    get0("LINCS.ResponseSigs", envir = asNamespace("scFOCAL"))
   })
 
-################################################################################
-#
-################################################################################
+  ################################################################################
+  #
+  ################################################################################
   # handle upload of Seurat object
   rdsSeurat <- reactive({
     req(input$seurobjRDS)
     readRDS(input$seurobjRDS$datapath)
   })
+
+  ######
+  # SeuratObject Version Detection
+  seurat_obj_version <- reactive({
+    if (unlist(SeuratObject::Version(rdsSeurat()))[1] < 5){
+      print("Older version Seurat object detected: (server.R #81)")
+    } else {
+      print("V5 Seurat object detected: (server.R #83)")
+      return(NULL)
+    }
+  })
+
+  output$seurat_obj_v5 <- reactive({
+    return(is.null(seurat_obj_version()))
+  })
+  outputOptions(output, 'seurat_obj_v5', suspendWhenHidden = FALSE)
+
+  #####
+  # OrthogonAL Detection - test if Seurat object is output from OrthogonAL
+  isOrthogonAL <- reactive({
+    RDSseurat <- rdsSeurat()
+    assays <- names(RDSseurat@assays)
+    print(assays)
+    if ("RNA_ortho" %in% assays){
+      print("Object detected is from OrthogonAL")
+      "Object detected is from OrthogonAL"
+    } else {
+      print("not OrthogonAL object")
+      return(NULL)
+    }
+  })
+
+  output$OrthogonAL <- reactive({
+    print(c(isOrthogonAL()))
+    return(is.null(isOrthogonAL()))
+  })
+  outputOptions(output, 'OrthogonAL', suspendWhenHidden = FALSE)
+
+  #####
 
   sl <- reactive({
     if (class(rdsSeurat()) == "Seurat"){
@@ -90,6 +104,51 @@ server <- function(input, output) {
   })
 
   outputOptions(output, 'seuratNotLoaded', suspendWhenHidden = FALSE)
+
+  # Custom TCS Upload
+  ##############################################################################
+  # handle upload of Seurat object
+  customTCScsv <- reactive({
+    req(input$customTCScsvPath)
+    read.csv(file = input$customTCScsvPath$datapath, header = T)
+  })
+
+  ######
+  # SeuratObject Version Detection
+  customTCSvalidation <- reactive({ # need to add in functionality to test for correct csv format...
+    # if (class(customTCScsv()) == "data.frame"){
+    #   print("Custom TCS successfully loaded")
+    # } else {
+    #   print("TEST")
+    #   return(NULL)
+    # }
+    req(input$customTCScsvPath$datapath)
+    return(NULL)
+  })
+
+  output$TCSuploaded <- reactive({
+    return(is.null(customTCSvalidation()))
+  })
+  outputOptions(output, 'TCSuploaded', suspendWhenHidden = FALSE)
+
+  # modal - browse TCS upload
+
+  output$customTCS_table <- DT::renderDataTable({
+    DT::datatable(customTCScsv())
+  })
+
+  observeEvent(input$customTCSbrowser_button, {
+    showModal(modalDialog(
+      title = "Custom TCS Browser",
+      tags$head(tags$style(".modal-dialog{ width:85% !important;}")),
+      DT::dataTableOutput("customTCS_table"),
+      br(),
+      "plotSomethingHere",
+      easyClose = TRUE,
+      footer = modalButton("Close")
+    ))
+  })
+  ##############################################################################
 
   # Handle upload of pre-calculated correlation matrix
   corrMatUpload <- reactive({
@@ -113,58 +172,6 @@ server <- function(input, output) {
   })
   outputOptions(output, 'corrMatNotUploaded', suspendWhenHidden = FALSE)
 
-  # pb <- reactive({
-  #   req(input$perturbationButton)
-  #   return(NULL)
-  # })
-
-  # pb <- reactive({
-  #   return(NULL)
-  # })
-  #
-  # observeEvent(input$perturbationButton, {
-  #   a <- c("pressed")
-  #   pb(a)
-  # })
-
-  # pb2 <- reactive({
-  #   return(is.null(pb()))
-  # })
-
-  # output$perturbationButtonNotPressed <- reactive({
-  #   return(is.null(input$perturbationButton))
-  # })
-  #
-  # outputOptions(output, 'perturbationButtonNotPressed', suspendWhenHidden = FALSE)
-
-  # add in logic to test for seurat object class, then set a value to use conditional panel with...
-
-  # rv <- reactiveVal()
-  # observeEvent(input$seurobjRDS, {
-  #   if (class(rdsSeurat()) == "Seurat") {
-  #     print("Seurat")
-  #     # output$seuratLoaded <- renderText({TRUE})
-  #   }
-  # })
-  # #
-
-
-  # output$seuratNotLoadedVal <- renderText({output$seuratNotLoaded})
-  # observeEvent(input$seurobjRDS,{ # When RDS is uploaded - read seurat object . RDS into workspace as reactive rdsSeurat.
-  #  rdsSeurat(readRDS(input$seurobjRDS$datapath))
-  #}, ignoreInit = TRUE, ignoreNull = FALSE)
-  #=======
-  # rdsSeurat <- reactiveVal()
-  # class(rdsSeurat) once upload is done, should be a seurat object
-  # so conditional statement: if (class(rdsSeurat) == "largeSeurat") {
-  # do calcs
-  # }
-  # }
-  #observeEvent(input$seurobjRDS,{ # When RDS is uploaded - read seurat object . RDS into workspace as reactive rdsSeurat.
-  # rdsSeurat(readRDS(input$seurobjRDS$datapath))
-  #})
-  #>>>>>>> ad8088665b4cd0a5ec9e1d3bfe4f65d9477ffc5d
-  #>
   output$L1000_release_InSilico <- renderUI({ # select from dropdown which L1000 release to use for in silico perturbation:
     selectInput('L1000_Release', #input$groupByRDS
                 choices = c("2015", "2017", "2021"),
@@ -193,6 +200,16 @@ server <- function(input, output) {
                 multiple = F)
   })
 
+  output$subject_replicate_ident <- renderUI({
+    RDSseurat <- rdsSeurat()
+    metadata_slots_RDS <- colnames(RDSseurat@meta.data)
+    selectInput('subject_replicate_ident',
+                choices = unique(metadata_slots_RDS),
+                label = "Select subject/replicate metadata slot",
+                selected = NULL,
+                multiple = F)
+  })
+
   output$normalCellIdentsRDS <- renderUI({
     RDSseurat <- rdsSeurat()
     RDSseurat <- SetIdent(RDSseurat, value = input$groupByRDS)
@@ -207,6 +224,13 @@ server <- function(input, output) {
 
   output$dimplotRDS <- renderPlot({
     p1 <- Seurat::DimPlot(rdsSeurat(), reduction = input$reductionUseRDS, group.by = input$groupByRDS) +
+      theme_void() +
+      theme(plot.title = element_text(size = 18, face = "bold"))
+    plot_grid(plotlist = list(p1))
+  })
+
+  output$dimplotRDS_subject <- renderPlot({
+    p1 <- Seurat::DimPlot(rdsSeurat(), reduction = input$reductionUseRDS, group.by = input$subject_replicate_ident) + ###
       theme_void() +
       theme(plot.title = element_text(size = 18, face = "bold"))
     plot_grid(plotlist = list(p1))
@@ -263,6 +287,15 @@ server <- function(input, output) {
     }
     # return(!is.null(input$normalCellIdentsRDS))
   })
+
+  ps_noControl <- reactive({
+    if (input$noNormalCellIdentsCheckbox == TRUE){
+      if (!is.null(input$cancerCellIdentsRDS) == TRUE){
+        return(TRUE)
+      }
+    }
+  })
+
   output$controlsSelected <- reactive({
     return(!is.null(ps()))
   })
@@ -270,8 +303,17 @@ server <- function(input, output) {
     return(is.null(ps()))
   })
 
+  output$controlsSelected_noControl <- reactive({
+    return(!is.null(ps_noControl()))
+  })
+  output$controlsNotSelected_noControl <- reactive({
+    return(is.null(ps_noControl()))
+  })
+
   outputOptions(output, 'controlsSelected', suspendWhenHidden = FALSE)
   outputOptions(output, 'controlsNotSelected', suspendWhenHidden = FALSE)
+  outputOptions(output, 'controlsSelected_noControl', suspendWhenHidden = FALSE)
+  outputOptions(output, 'controlsNotSelected_noControl', suspendWhenHidden = FALSE)
 
   ##############################################################################
   #                                                                            #
@@ -326,28 +368,6 @@ server <- function(input, output) {
   data(data.frame())
 
   observeEvent(input$CalcDiseaseSig, {
-    # if (input$dataChoice == "10X_GBM"){
-    #   progress <- shiny::Progress$new()
-    #   on.exit(progress$close())
-    #   progress$set(message = "Running MAST", value = 0)
-    #   diseaseSigs <- data()
-    #   tumor_markers <- data.frame()
-    #   for (i in 1:length(input$cancerCellIdents)){
-    #     progress$inc(1/length(input$cancerCellIdents), detail = paste("Running Cluster", input$cancerCellIdents[i]))
-    #     clusterDiseaseSig <- FindMarkers(testdat,
-    #                                      ident.1 = input$cancerCellIdents[i],
-    #                                      ident.2 = input$normalCellIdents,
-    #                                      test.use = "MAST",
-    #                                      only.pos = T,
-    #                                      max.cells.per.ident = input$cellSubsetMax_1
-    #     ) # Can use max.cells.per.ident to set a slider for option to speed up analysis.
-    #     clusterDiseaseSig$cluster <- input$cancerCellIdents[i]
-    #     clusterDiseaseSig$gene <- rownames(clusterDiseaseSig)
-    #     tumor_markers <- rbind(tumor_markers, clusterDiseaseSig)
-    #   }
-    #   data(tumor_markers)
-    # }
-    # if (input$dataChoice == "RDS_Upload"){
     progress <- shiny::Progress$new()
     on.exit(progress$close())
     progress$set(message = "Running MAST", value = 0)
@@ -355,19 +375,75 @@ server <- function(input, output) {
     tumor_markers <- data.frame()
     RDSseurat <- rdsSeurat()
     RDSseurat <- SetIdent(RDSseurat, value = input$groupByRDS)
-    for (i in 1:length(input$cancerCellIdentsRDS)){
-      progress$inc(1/length(input$cancerCellIdentsRDS), detail = paste("Running Cluster", input$cancerCellIdentsRDS[i]))
-      clusterDiseaseSig <- FindMarkers(RDSseurat,
-                                       ident.1 = input$cancerCellIdentsRDS[i],
-                                       ident.2 = input$normalCellIdentsRDS,
-                                       test.use = "MAST",
-                                       only.pos = T,
-                                       max.cells.per.ident = input$cellSubsetMax_1
-      ) # Can use max.cells.per.ident to set a slider for option to speed up analysis.
-      clusterDiseaseSig$cluster <- input$cancerCellIdentsRDS[i]
-      clusterDiseaseSig$gene <- rownames(clusterDiseaseSig)
-      tumor_markers <- rbind(tumor_markers, clusterDiseaseSig)
+
+    if (is.null(isOrthogonAL()) == TRUE){ # is this backwards? ############################################################################################# <
+      print("Is null = F, non-orthogonal")
+    } else {
+      print("Is.null = T, OrthogonalObject")
+      DefaultAssay(RDSseurat) <- c("RNA_ortho")
     }
+
+    if (input$diseaseSignaturesByReplicate == 'By Subject/Replicate') {
+      print("would calc by replicate here!!")
+      # subject_replicate_ident
+
+      for (replicate in unique(RDSseurat@meta.data[,c(input$subject_replicate_ident)])){
+        print(replicate)
+        RDSseurat <- SetIdent(RDSseurat, value = input$subject_replicate_ident)
+        sub_obj <- subset(RDSseurat, idents = c(replicate))
+        sub_obj <- SetIdent(sub_obj, value = input$groupByRDS)
+        print(table(Idents(sub_obj)))
+        for (i in 1:length(input$cancerCellIdentsRDS)){
+          if (input$cancerCellIdentsRDS[i] %in% unique(sub_obj@meta.data[,input$groupByRDS])){
+
+            ident_counts <- table(Idents(sub_obj))
+            print(names(ident_counts))
+            if (ident_counts[input$cancerCellIdentsRDS[i]] > 3) {
+              # Proceed with the analysis for this identity
+              cat("Processing identity:", input$cancerCellIdentsRDS[i], "with", ident_counts[input$cancerCellIdentsRDS[i]], "cells.\n")
+              progress$inc(1/(length(input$cancerCellIdentsRDS)*length(unique(RDSseurat@meta.data[,c(input$subject_replicate_ident)]))),
+                           detail = paste("Running Cluster ", input$cancerCellIdentsRDS[i], " of subject ", replicate))
+              clusterDiseaseSig <- FindMarkers(sub_obj,
+                                               ident.1 = input$cancerCellIdentsRDS[i],
+                                               ident.2 = input$normalCellIdentsRDS,
+                                               test.use = "MAST",
+                                               only.pos = F,
+                                               max.cells.per.ident = input$cellSubsetMax_1) # Can use max.cells.per.ident to set a slider for option to speed up analysis.
+              clusterDiseaseSig$cluster <- input$cancerCellIdentsRDS[i]
+              clusterDiseaseSig$gene <- rownames(clusterDiseaseSig)
+              clusterDiseaseSig$replicate <- replicate
+              tumor_markers <- rbind(tumor_markers, clusterDiseaseSig)
+            } else {
+              # Skip this identity due to insufficient cell count
+              cat("Skipping identity:", input$cancerCellIdentsRDS[i], "with only", ident_counts[input$cancerCellIdentsRDS[i]], "cells.\n")
+            }
+
+
+          }
+
+        }
+
+      }
+
+    }
+    if (input$diseaseSignaturesByReplicate == 'Overall') {
+      RDSseurat <- SetIdent(RDSseurat, value = input$groupByRDS)
+      for (i in 1:length(input$cancerCellIdentsRDS)){
+        progress$inc(1/length(input$cancerCellIdentsRDS), detail = paste("Running Cluster", input$cancerCellIdentsRDS[i]))
+        clusterDiseaseSig <- FindMarkers(RDSseurat,
+                                         ident.1 = input$cancerCellIdentsRDS[i],
+                                         ident.2 = input$normalCellIdentsRDS,
+                                         test.use = "MAST",
+                                         only.pos = F,
+                                         max.cells.per.ident = input$cellSubsetMax_1
+        ) # Can use max.cells.per.ident to set a slider for option to speed up analysis.
+        clusterDiseaseSig$cluster <- input$cancerCellIdentsRDS[i]
+        clusterDiseaseSig$gene <- rownames(clusterDiseaseSig)
+        tumor_markers <- rbind(tumor_markers, clusterDiseaseSig)
+      }
+    }
+
+    print(head(tumor_markers))
     data(tumor_markers)
     # }
   })
@@ -425,48 +501,105 @@ server <- function(input, output) {
   wblincs <- reactiveVal()
   wreversalMat <- reactiveVal()
   observeEvent(input$reverseDiseaseSigs, {
-    # Here - run processing needed to reverse signatures. Can we add in a progress meter as well?
-    sliced_signatures2 <- diseaseSigs()
-    # sliced_signatures2$group <- paste0(sliced_signatures2$slice, "_", sliced_signatures2$cluster)
-    #
-    u <- reshape2::dcast(sliced_signatures2, formula = cluster ~ gene, value.var = "avg_log2FC", fill = 0, fun.aggregate = mean)
-    rownames(u) <- u$cluster
-    #   u$group <- NULL
-    u <- as.data.frame(t(u))
 
-    # QC - that as total DEGs increases so does the number within L1000 geneset.
-    LINCS_DEGs <- sliced_signatures2[which(sliced_signatures2$gene %in% L1000_genes()),]
-    a <- as.vector(table(sliced_signatures2$cluster))
-    b <- as.vector(table(LINCS_DEGs$cluster))
-    alincs(a)
-    blincs(b)
+    if (input$diseaseSignaturesByReplicate == 'By Subject/Replicate') {
+      diseaseSigs <- diseaseSigs()
+      replicates <- unique(diseaseSigs$replicate)
+      rep_final_matrix <- data.frame()
+      for (rep in replicates){
+        print(paste("Reversing signatures from", rep, sep = " "))
+        rep_dS <- subset(diseaseSigs, diseaseSigs$replicate == rep)
+        u <- reshape2::dcast(rep_dS, formula = cluster ~ gene, value.var = "avg_log2FC", fill = 0, fun.aggregate = mean)
+        rownames(u) <- u$cluster
+        #   u$group <- NULL
+        u <- as.data.frame(t(u))
 
-    Final_Matrix <- data.frame()
-    print(unique(LINCS_DEGs$cluster))
-    for (i in 1:length(unique(LINCS_DEGs$cluster))) {
-      vect1 <- LINCS_DEGs[which(LINCS_DEGs$cluster == unique(LINCS_DEGs$cluster)[[i]]), "avg_log2FC"]
-      vect1_Genes <- as.character(LINCS_DEGs[which(LINCS_DEGs$cluster == unique(LINCS_DEGs$cluster)[[i]]), "gene"])
-      names(vect1) <- vect1_Genes
-      setdiff(vect1_Genes, colnames(LINCS.ResponseSigs()))
-      LINCS.ResponseSigs.Filtered <- LINCS.ResponseSigs()[,vect1_Genes]
-      Ranked_List <- apply(LINCS.ResponseSigs.Filtered, 1, function(x){
-        mult <- vect1 * x
-        a <- length(mult[mult>0])
-        b <- length(mult[mult<0])
-        if (a==0){a <- 1}
-        c <- b / a
-      })
+        # QC - that as total DEGs increases so does the number within L1000 geneset.
+        LINCS_DEGs <- rep_dS[which(rep_dS$gene %in% L1000_genes()),]
+        a <- as.vector(table(rep_dS$cluster))
+        b <- as.vector(table(LINCS_DEGs$cluster))
+        alincs(a)
+        blincs(b)
 
-      Final_Matrix <- rbind(Final_Matrix, Ranked_List)
+        Final_Matrix <- data.frame()
+        print(unique(LINCS_DEGs$cluster))
+        for (i in 1:length(unique(LINCS_DEGs$cluster))) {
+          vect1 <- LINCS_DEGs[which(LINCS_DEGs$cluster == unique(LINCS_DEGs$cluster)[[i]]), "avg_log2FC"]
+          vect1_Genes <- as.character(LINCS_DEGs[which(LINCS_DEGs$cluster == unique(LINCS_DEGs$cluster)[[i]]), "gene"])
+          names(vect1) <- vect1_Genes
+          setdiff(vect1_Genes, colnames(LINCS.ResponseSigs()))
+          LINCS.ResponseSigs.Filtered <- LINCS.ResponseSigs()[,vect1_Genes]
+          Ranked_List <- apply(LINCS.ResponseSigs.Filtered, 1, function(x){
+            mult <- vect1 * x
+            a <- length(mult[mult>0])
+            b <- length(mult[mult<0])
+            if (a==0){a <- 1}
+            c <- b / a
+          })
+
+          Final_Matrix <- rbind(Final_Matrix, Ranked_List)
 
 
-      clusters <- unique(LINCS_DEGs$cluster)
+          clusters <- unique(LINCS_DEGs$cluster)
 
-      colnames(Final_Matrix) <- names(Ranked_List)
-      rownames(Final_Matrix) <- clusters[1:i]
+          colnames(Final_Matrix) <- names(Ranked_List)
+          rownames(Final_Matrix) <- clusters[1:i]
+          rownames(Final_Matrix) <- paste0(rownames(Final_Matrix), "_", rep)
+        }
+
+        rep_final_matrix <- rbind(rep_final_matrix, Final_Matrix)
+        print("final replicate reversal mat")
+        print(head(rep_final_matrix))
+        wreversalMat(rep_final_matrix)
+
+      }
+    } else {
+
+      # Here - run processing needed to reverse signatures. Can we add in a progress meter as well?
+      sliced_signatures2 <- diseaseSigs()
+      # sliced_signatures2$group <- paste0(sliced_signatures2$slice, "_", sliced_signatures2$cluster)
+      #
+      u <- reshape2::dcast(sliced_signatures2, formula = cluster ~ gene, value.var = "avg_log2FC", fill = 0, fun.aggregate = mean)
+      rownames(u) <- u$cluster
+      #   u$group <- NULL
+      u <- as.data.frame(t(u))
+
+      # QC - that as total DEGs increases so does the number within L1000 geneset.
+      LINCS_DEGs <- sliced_signatures2[which(sliced_signatures2$gene %in% L1000_genes()),]
+      a <- as.vector(table(sliced_signatures2$cluster))
+      b <- as.vector(table(LINCS_DEGs$cluster))
+      alincs(a)
+      blincs(b)
+
+      Final_Matrix <- data.frame()
+      print(unique(LINCS_DEGs$cluster))
+      for (i in 1:length(unique(LINCS_DEGs$cluster))) {
+        vect1 <- LINCS_DEGs[which(LINCS_DEGs$cluster == unique(LINCS_DEGs$cluster)[[i]]), "avg_log2FC"]
+        vect1_Genes <- as.character(LINCS_DEGs[which(LINCS_DEGs$cluster == unique(LINCS_DEGs$cluster)[[i]]), "gene"])
+        names(vect1) <- vect1_Genes
+        setdiff(vect1_Genes, colnames(LINCS.ResponseSigs()))
+        LINCS.ResponseSigs.Filtered <- LINCS.ResponseSigs()[,vect1_Genes]
+        Ranked_List <- apply(LINCS.ResponseSigs.Filtered, 1, function(x){
+          mult <- vect1 * x
+          a <- length(mult[mult>0])
+          b <- length(mult[mult<0])
+          if (a==0){a <- 1}
+          c <- b / a
+        })
+
+        Final_Matrix <- rbind(Final_Matrix, Ranked_List)
+
+
+        clusters <- unique(LINCS_DEGs$cluster)
+
+        colnames(Final_Matrix) <- names(Ranked_List)
+        rownames(Final_Matrix) <- clusters[1:i]
+      }
+
+      wreversalMat(Final_Matrix)
     }
 
-    wreversalMat(Final_Matrix)
+
 
   })
 
@@ -814,27 +947,85 @@ server <- function(input, output) {
     p
   })
 
+  ##############################################################################
+  #                                                                            #
+  ##############################################################################
+
   # Calculate correlation matrix between L1000 compounds and single-cells in RDS upload.
   RDS_Final_CorrMat <- reactiveVal()
 
   observeEvent(eventExpr = input$CalculateRDS_L1000_Spearman_Mat, { # Here, we should add dropdown menu to select data slot to pull scale.data from...
     RDSseurat <- rdsSeurat()
-    # print("What is the default assay of your .RDS?")
-    # print(DefaultAssay(RDSseurat))
-    # print(head(RDSseurat@assays$RNA@scale.data))
-    # print(dim(RDSseurat@assays$integrated@scale.data))
-    if (dim(RDSseurat@assays$RNA@scale.data)[1] == 0){
-      print("scale.data slot is empty - scaling data")
-      RDSseurat <- ScaleData(RDSseurat, do.center = T)
+    if (unlist(SeuratObject::Version(RDSseurat))[1] < 5) {
+      if (dim(RDSseurat@assays$RNA@scale.data)[1] == 0){
+        print("scale.data slot is empty - scaling data")
+        RDSseurat <- ScaleData(RDSseurat, do.center = T)
+      }
+    } else {
+      print("V5 Seurat Object Detected: server.R #853")
+      if (is.null(isOrthogonAL()) == TRUE){ # is this backwards? ############################################################################################# <
+        print("Is null = F, non-orthogonal")
+        # if (dim(RDSseurat@assays$RNA@layers$scale.data)[1] == 0){
+        #   print("scale.data slot is empty - scaling data")
+        #   RDSseurat <- ScaleData(RDSseurat, do.center = T)
+        # }
+      } else {
+        print("Is.null = T, OrthogonalObject")
+        DefaultAssay(RDSseurat) <- c("RNA_ortho")
+        # if (dim(RDSseurat@assays$RNA_ortho@layers$scale.data)[1] == 0){
+        #   print("scale.data slot is empty - scaling data")
+        #   RDSseurat <- ScaleData(RDSseurat, do.center = T)
+        # }
+      }
+      # DefaultAssay(RDSseurat) <- "RNA_ortho"
+      # if (dim(RDSseurat@assays$RNA_ortho@layers$scale.data)[1] == 0){
+      #   print("scale.data slot is empty - scaling data")
+      #   RDSseurat <- ScaleData(RDSseurat, do.center = T)
+      # }
     }
 
     a <- LINCS.ResponseSigs()
-    print(a)
     a$compound <- rownames(a)
-
     progress5 <- shiny::Progress$new()
     progress5$set(message = "Transposing scale.data slot")
-    total.transpose <- t(RDSseurat@assays$RNA@scale.data) # which assay to integrate with?
+
+    # if (is.null(isOrthogonAL()) == FALSE){ # is this backwards?
+    #   print("Is null = F, orthogonal")
+    # } else {
+    #   print("Is.null = T, non-OrthogonalObject")
+    #   DefaultAssay(RDSseurat) <- c("RNA_ortho")
+    # }
+
+    if (is.null(isOrthogonAL()) == TRUE){ # is this backwards? ############################################################################################# <
+      print("Is null = F, non-orthogonal")
+    } else {
+      print("Is.null = T, OrthogonalObject")
+      DefaultAssay(RDSseurat) <- c("RNA_ortho")
+    }
+    ##########################################################################################################################################
+    if (unlist(SeuratObject::Version(RDSseurat))[1] < 5){
+      print("line 909: detected as less than v5")
+      # if (is.null(isOrthogonAL()) == FALSE){ # is this backwards?
+      #   print("Is null = F, non-orthogonal")
+      # } else {
+      #   print("Is.null = T, OrthogonalObject")
+      #   DefaultAssay(RDSseurat) <- c("RNA_ortho")
+      # }
+      total.transpose <- t(RDSseurat@assays$RNA@scale.data) # which assay to integrate with?
+    } else {
+      print("We're here 927")
+      if (is.null(isOrthogonAL()) == TRUE){ # is this backwards?
+        print("Is.null = T, non-OrthogonalObject")
+        # DefaultAssay(RDSseurat) <- c("RNA_ortho")
+        # total.transpose <- t(RDSseurat@assays$RNA_ortho@layers$scale.data) # which assay to integrate with?
+        total.transpose <- t(GetAssayData(RDSseurat, assay = "RNA", layer = "scale.data"))
+      } else {
+        print("Is null = F, orthogonal")
+        # total.transpose <- t(RDSseurat@assays$RNA@layers$scale.data) # which assay to integrate with?
+        total.transpose <- t(GetAssayData(RDSseurat, assay = "RNA_ortho", layer = "scale.data"))
+      }
+    }
+    ##################################################################################################################################################
     progress5$close()
 
     progress6 <- shiny::Progress$new()
@@ -861,19 +1052,134 @@ server <- function(input, output) {
       rownames(Final_Matrix) <- rownames(LINCS.ResponseSigs())[1:counter]
       counter <- counter + 1
     }
-
     Final_Matrix <- na.omit(Final_Matrix)
-
     RDS_Final_CorrMat(Final_Matrix)
-
-    # progress7 <- shiny::Progress$new()
-    # progress7$set(message = "Integrating correlations into Seurat object as cell metadata")
-    # Final_Matrix2 <- as.data.frame(t(Final_Matrix))
-    # RDSseurat <- rdsSeurat()
-    # added <- AddMetaData(RDSseurat, Final_Matrix2)
-    # rdsSeurat(added)
-    # progress7$close()
   })
+
+  ## Custom TCS Scoring
+  ##############################################################################
+  customTCScorrMat <- reactiveVal()
+  observeEvent(eventExpr = input$CalculateCustomTCSConnectivities, { # Here, we should add dropdown menu to select data slot to pull scale.data from...
+    #### tranpose scale.data
+    RDSseurat <- rdsSeurat()
+    if (unlist(SeuratObject::Version(RDSseurat))[1] < 5) {
+      if (dim(RDSseurat@assays$RNA@scale.data)[1] == 0){
+        print("scale.data slot is empty - scaling data")
+        RDSseurat <- ScaleData(RDSseurat, do.center = T)
+      }
+    } else {
+      print("V5 Seurat Object Detected: server.R #853")
+      if (is.null(isOrthogonAL()) == TRUE){ # is this backwards? ############################################################################################# <
+        print("Is null = F, non-orthogonal")
+        # if (dim(RDSseurat@assays$RNA@layers$scale.data)[1] == 0){
+        #   print("scale.data slot is empty - scaling data")
+        #   RDSseurat <- ScaleData(RDSseurat, do.center = T)
+        # }
+      } else {
+        print("Is.null = T, OrthogonalObject")
+        DefaultAssay(RDSseurat) <- c("RNA_ortho")
+        # if (dim(RDSseurat@assays$RNA_ortho@layers$scale.data)[1] == 0){
+        #   print("scale.data slot is empty - scaling data")
+        #   RDSseurat <- ScaleData(RDSseurat, do.center = T)
+        # }
+      }
+      # DefaultAssay(RDSseurat) <- "RNA_ortho"
+      # if (dim(RDSseurat@assays$RNA_ortho@layers$scale.data)[1] == 0){
+      #   print("scale.data slot is empty - scaling data")
+      #   RDSseurat <- ScaleData(RDSseurat, do.center = T)
+      # }
+    }
+
+    a <- LINCS.ResponseSigs()
+    a$compound <- rownames(a)
+    progress5 <- shiny::Progress$new()
+    progress5$set(message = "Transposing scale.data slot")
+
+    if (is.null(isOrthogonAL()) == TRUE){ # is this backwards? ############################################################################################# <
+      print("Is null = F, non-orthogonal")
+    } else {
+      print("Is.null = T, OrthogonalObject")
+      DefaultAssay(RDSseurat) <- c("RNA_ortho")
+    }
+    ##########################################################################################################################################
+    if (unlist(SeuratObject::Version(RDSseurat))[1] < 5){
+      print("line 909: detected as less than v5")
+      total.transpose <- t(RDSseurat@assays$RNA@scale.data) # which assay to integrate with?
+    } else {
+      print("We're here 927")
+      if (is.null(isOrthogonAL()) == TRUE){ # is this backwards?
+        print("Is.null = T, non-OrthogonalObject")
+        total.transpose <- t(GetAssayData(RDSseurat, assay = "RNA", layer = "scale.data"))
+      } else {
+        print("Is null = F, orthogonal")
+        total.transpose <- t(GetAssayData(RDSseurat, assay = "RNA_ortho", layer = "scale.data"))
+      }
+    }
+
+    progress5$close()
+
+
+    ####
+
+    custTCS <- customTCScsv()
+    print(colnames(custTCS))
+    custTCS <- data.frame(gene = custTCS$gene,
+                          log2FoldChange = custTCS$log2FoldChange,
+                          padj = custTCS$padj)
+    print(head(custTCS))
+    # scoring approach fork
+    if (input$TCS_scoring_method == "Spearman"){
+      print("Spearman startin'!")
+      Final_Matrix <- data.frame()
+      cmpd_genes <- custTCS$gene
+      print(head(colnames(total.transpose)))
+      print(head(cmpd_genes))
+      print(intersect(cmpd_genes,colnames(total.transpose)))
+      cmpd_overlap <- colnames(total.transpose)[which(colnames(total.transpose) %in% cmpd_genes)]
+      print(length(cmpd_overlap))
+      total.transpose.cmpd <- total.transpose[,cmpd_overlap]
+      cmpd_ordered <- as.numeric(as.vector(custTCS$log2FoldChange))
+      names(cmpd_ordered) <- cmpd_genes
+      cmpd_ordered2 <- cmpd_ordered[cmpd_overlap] # Character list in brackets orders to fit that character list...
+      # head(colnames(total.transpose.cmpd) == names(cmpd_ordered2))
+      SC <- cor(cmpd_ordered2, t(total.transpose.cmpd), method = "spearman")
+      Final_Matrix <- rbind(Final_Matrix, SC)
+      # rownames(Final_Matrix) <- input$Custom_TCS_nameInput
+      # counter <- counter + 1
+    }
+    # print(head(Final_Matrix))
+    rownames(Final_Matrix) <- c(input$Custom_TCS_nameInput)
+    customTCScorrMat(Final_Matrix)
+  })
+
+  # need to insert conditional statement testing null state of RDS_Final_CorrMat
+  output$CustomTCScorrMatrixCalculated <- reactive({
+    return(!is.null(customTCScorrMat()))
+  })
+  outputOptions(output, 'CustomTCScorrMatrixCalculated', suspendWhenHidden = FALSE)
+
+  output$downloadCustomTCScellConnectivities <- downloadHandler(
+    filename = function() {
+      paste(input$Custom_TCS_nameInput, "_connectivities_",Sys.Date(), ".csv", sep = "")
+    },
+    content = function(file) {
+      write.csv(as.data.frame(t(customTCScorrMat())), file, row.names = T)
+    }
+  )
+
+
+  seurat_custom_corradded <- reactive({ ############## testing...
+    req(input$CalculateCustomTCSConnectivities)
+    obj <- rdsSeurat()
+    Final_Matrix <- as.data.frame(t(customTCScorrMat()))
+    colnames(Final_Matrix) <- c(input$Custom_TCS_nameInput)
+    print("Printing custom results colnames...")
+    print(colnames(Final_Matrix))
+    obj <- AddMetaData(obj, metadata = Final_Matrix)
+    obj
+  })
+
+  ##############################################################################
 
   output$finalMatrixText <- renderText({
     Final_Matrix <- as.data.frame(t(RDS_Final_CorrMat()))
@@ -902,7 +1208,7 @@ server <- function(input, output) {
       paste("RDS_upload_L1000_consensus_corrmat.csv", sep = "")
     },
     content = function(file) {
-      write.csv(RDS_Final_CorrMat(), file, row.names = T)
+      write.csv(as.data.frame(t(RDS_Final_CorrMat())), file, row.names = T) #customTCScorrMat
     }
   )
 
@@ -1018,8 +1324,6 @@ server <- function(input, output) {
   # })
 
   output$refSignatureUMAPRDS <- renderPlot({
-    # if (input$dataChoice == "RDS_Upload") {
-    # RDSseurat <- seurat_corradded()
     FeaturePlot(seurat_corradded(),
                 features = c(input$referenceCompound),
                 min.cutoff = input$sigMinCutoffRDS,
@@ -1029,9 +1333,18 @@ server <- function(input, output) {
                 pt.size = 1, order = F) +
       theme_void() +
       theme(plot.title = element_text(size = 18, face = "bold"))
+  })
 
-
-    # }
+  output$CustomRefSignatureUMAPRDS <- renderPlot({
+    FeaturePlot(seurat_custom_corradded(),
+                features = c(input$Custom_TCS_nameInput),
+                min.cutoff = input$sigMinCutoff_customTCS,
+                max.cutoff = input$sigMaxCutoff_customTCS,
+                reduction = input$reductionUseRDS,
+                cols = c("red", "black"),
+                pt.size = 1, order = F) +
+      theme_void() +
+      theme(plot.title = element_text(size = 18, face = "bold"))
   })
 
   # Visualization of compound spearmans across clusters
@@ -1278,8 +1591,12 @@ server <- function(input, output) {
   })
 
   output$referenceCompound <- renderText({
-    print(paste0("Step 3: Treat with " , c(input$referenceCompound)))
+    print(paste0("Treat with " , c(input$referenceCompound)))
   })
+
+
+  sensitiveCells <- reactiveVal()
+  resistantCells <- reactiveVal()
 
   output$scSynergySeq1RDS <- renderPlot({ # need to update RDS section with dual slider selection
     RDSseurat <- seurat_corradded()
@@ -1292,6 +1609,51 @@ server <- function(input, output) {
     dead <- subset(compoundSpearmans, subset = compoundSpearmans[input$referenceCompound] < input$correlationCutoff_RDS)
     livingCells <- rownames(living)
     deadCells <- rownames(dead)
+
+    resistantCells(livingCells)
+    sensitiveCells(deadCells)
+
+    p1 <- DimPlot(RDSseurat, reduction = input$reductionUseRDS,
+                  cells.highlight = intersect(deadCells, tumorCells), sizes.highlight = 0.001, cols.highlight = c("blue")) +
+      theme_void()
+    p1 <- p1 + ggtitle("Sensitive Cells") + NoLegend()
+    p2 <- DimPlot(RDSseurat, reduction = input$reductionUseRDS,
+                  cells.highlight = intersect(livingCells, tumorCells), sizes.highlight = 0.001, cols.highlight = c("red")) +
+      theme_void()
+    p2 <- p2 + ggtitle("Resistant Cells") + NoLegend()
+
+
+    # Make a plot to show percentage of live vs dead cells...
+    liveDead <- data.frame(row.names = NULL, resistant = length(livingCells), sensitive = length(deadCells))
+    liveDead <- as.data.frame(t(liveDead))
+    liveDead$liveDead <- rownames(liveDead)
+    colnames(liveDead) <- c("Freq", "liveDead")
+    liveDead
+    bp <- ggplot(liveDead, aes(x="", y = Freq, fill = liveDead))+
+      geom_bar(width = 1, stat = "identity")
+    pie <- bp + coord_polar("y", start = 0)
+    pie <- pie + theme_void() + scale_fill_nejm()
+    p3 <- plot_grid(plotlist = list(p1, p2, pie), ncol = 3)
+    p3
+  })
+
+
+  sensitiveCells_customTCS <- reactiveVal()
+  resistantCells_customTCS <- reactiveVal()
+  output$scSynergySeq_custTCS <- renderPlot({ # need to update RDS section with dual slider selection
+    RDSseurat <- seurat_custom_corradded()
+    RDSseurat <- SetIdent(RDSseurat, value = input$groupByRDS)
+    tumorCells <- WhichCells(RDSseurat, idents = input$cancerCellIdentsRDS)
+
+    compoundSpearmans <- RDSseurat@meta.data[input$Custom_TCS_nameInput] # How to do this for the RDS upload... where is the spearman matrix and do we add it as metadata to the seurat object?
+
+    living <- subset(compoundSpearmans, subset = compoundSpearmans[input$Custom_TCS_nameInput] > input$correlationCutoff_customTCS)
+    dead <- subset(compoundSpearmans, subset = compoundSpearmans[input$Custom_TCS_nameInput] < input$correlationCutoff_customTCS)
+    livingCells <- rownames(living)
+    deadCells <- rownames(dead)
+    resistantCells_customTCS(livingCells)
+    sensitiveCells_customTCS(deadCells)
+
     p1 <- DimPlot(RDSseurat, reduction = input$reductionUseRDS,
                   cells.highlight = intersect(deadCells, tumorCells), sizes.highlight = 0.001, cols.highlight = c("blue")) +
       theme_void()
@@ -1512,7 +1874,7 @@ server <- function(input, output) {
       newMeans <- merge(x = resistantMeans, y = sensitiveMeans, by.x = "compound", by.y = "compound")
       colnames(newMeans) <- c("compound", "resistantMean", "sensitiveMean")
       newMeans$deltaMean <- newMeans$resistantMean - newMeans$sensitiveMean
-      newMeans$pc <- predict(prcomp(~resistantMean+deltaMean, newMeans))[,1]
+      # newMeans$pc <- predict(prcomp(~resistantMean+deltaMean, newMeans))[,1]
       newMeans$density <- fields::interp.surface(MASS::kde2d(newMeans$resistantMean, newMeans$deltaMean),
                                                  newMeans[,c("resistantMean", "deltaMean")])
 
@@ -1542,7 +1904,7 @@ server <- function(input, output) {
       newMeansLabelDF3 <- slice_max(newMeansLabelDF2, order_by = absHyp, n = input$synergyPredictorSlider)
       # newMeansLabelDF2 <- rbind(slice_min)
 
-      p7 <- ggplot(newMeans, aes(resistantMean, deltaMean, color = pc)) + # alpha = 1/density
+      p7 <- ggplot(newMeans, aes(resistantMean, deltaMean, color = deltaMean)) + # alpha = 1/density
         geom_point(shape = 16, size = 2, show.legend = F) +
         geom_text_repel(data = newMeansLabelDF3, max.overlaps = 15,
                         aes(x=resistantMean, y = deltaMean, label = compound),
@@ -1553,6 +1915,457 @@ server <- function(input, output) {
       p7
     }
   })
+
+  ##############################################################################
+  # scFOCAL Combination Indexing
+  ##############################################################################
+
+  ## Custom Input Combination Indexing
+  tumorCells_customTCS <- reactiveVal()
+  # resistantCells_customTCS <- reactiveVal()
+  # sensitiveCells_customTCS <- reactiveVal()
+  limmaRes_custTCS <- reactiveVal()
+  zmat_custTCS <- reactiveVal()
+  seurRDS_customTCSsensitivity <- reactiveVal()
+  seurRDS_customTCS_sensitivityAssigner <- reactiveVal()
+  observeEvent(eventExpr = input$perturbationButton_customTCS, {
+    if (input$perturbationButton_customTCS >= 1){
+      RDSseurat <- seurat_custom_corradded()
+      RDSseurat <- SetIdent(RDSseurat, value = input$groupByRDS)
+      if (input$uploadCorrelationMatrix == TRUE){
+        testSpearman <- as.data.frame(t(corrMatUpload()))
+      } else {
+        testSpearman <- as.data.frame(t(RDS_Final_CorrMat()))
+      }
+      tumorCells <- WhichCells(RDSseurat, idents = input$cancerCellIdentsRDS)
+      compoundSpearmans <- RDSseurat@meta.data[input$Custom_TCS_nameInput]
+      compoundSpearmans <- subset(compoundSpearmans, rownames(compoundSpearmans) %in% tumorCells)
+      testSpearman <- testSpearman[which(rownames(testSpearman) %in% tumorCells),]
+      z_matrix <- 0.5 * log((1 + testSpearman) / (1 - testSpearman)) # apply Fisher z-transformation
+      resistantCells <- resistantCells_customTCS()
+      sensitiveCells <- sensitiveCells_customTCS()
+      #####
+      sensitivityAssigner <- data.frame(cells = c(resistantCells, sensitiveCells),
+                                        sensitivity = c(rep("resistant", length(resistantCells)),
+                                                        rep("sensitive", length(sensitiveCells))))
+      rownames(sensitivityAssigner) <- sensitivityAssigner$cells
+      sensitivityAssigner$cells <- NULL
+
+      RDSseurat <- AddMetaData(RDSseurat, metadata = sensitivityAssigner)
+      seurRDS_customTCSsensitivity(RDSseurat)
+      sensitivityAssigner <- subset(sensitivityAssigner, rownames(sensitivityAssigner) %in% tumorCells)
+      seurRDS_customTCS_sensitivityAssigner(sensitivityAssigner)
+      #####
+      # set up groupings and construct design matrix...
+      snames <- colnames(testSpearman)
+      subjectID <- data.frame(subjectID = RDSseurat@meta.data[,input$subject_replicate_ident], row.names = rownames(RDSseurat@meta.data))
+      subjectID <- subjectID[which(rownames(subjectID) %in% rownames(testSpearman)),]
+
+      sensitivity <- data.frame(sensitivity = RDSseurat$sensitivity, row.names = colnames(RDSseurat))
+      # sensitivity <- subset(sensitivity, rownames(sensitivity) %in% tumorCells)
+      sensitivity <- sensitivity[which(rownames(sensitivity) %in% rownames(testSpearman)),]
+      # subject_group <- interaction(sensitivity$sensitivity, subjectID$subjectID)
+      sensitivity <- factor(sensitivity)
+      subjectID <- factor(subjectID)
+      design <- model.matrix(~ subjectID + sensitivity)
+      z_matrix <- t(z_matrix)
+      zmat_custTCS(z_matrix)
+      fit <- lmFit(z_matrix, design)
+      fit <- eBayes(fit)
+      results <- topTable(fit, coef = 2, adjust.method = "fdr", number = Inf)
+      limmaRes_custTCS(results)
+      print(head(results))
+      print(head(colnames(z_matrix)))
+    }
+  })
+
+  ## L1000 Input Combination Indexing
+  tumorCells <- reactiveVal()
+  limmaRes <- reactiveVal()
+  zmat <- reactiveVal()
+  seurRDSsensitivity <- reactiveVal()
+  seurRDS_sensitivityAssigner <- reactiveVal()
+  observeEvent(eventExpr = input$perturbationButton, {
+    if (input$perturbationButton >= 1){
+      RDSseurat <- seurat_corradded()
+      RDSseurat <- SetIdent(RDSseurat, value = input$groupByRDS)
+      if (input$uploadCorrelationMatrix == TRUE){
+        testSpearman <- as.data.frame(t(corrMatUpload()))
+      } else {
+        testSpearman <- as.data.frame(t(RDS_Final_CorrMat()))
+      }
+      tumorCells <- WhichCells(RDSseurat, idents = input$cancerCellIdentsRDS)
+      compoundSpearmans <- RDSseurat@meta.data[input$referenceCompound]
+      compoundSpearmans <- subset(compoundSpearmans, rownames(compoundSpearmans) %in% tumorCells)
+      testSpearman <- testSpearman[which(rownames(testSpearman) %in% tumorCells),]
+      z_matrix <- 0.5 * log((1 + testSpearman) / (1 - testSpearman)) # apply Fisher z-transformation
+      resistantCells <- resistantCells()
+      sensitiveCells <- sensitiveCells()
+      #####
+      sensitivityAssigner <- data.frame(cells = c(resistantCells, sensitiveCells),
+                                        sensitivity = c(rep("resistant", length(resistantCells)),
+                                                        rep("sensitive", length(sensitiveCells))))
+      rownames(sensitivityAssigner) <- sensitivityAssigner$cells
+      sensitivityAssigner$cells <- NULL
+
+      RDSseurat <- AddMetaData(RDSseurat, metadata = sensitivityAssigner)
+      seurRDSsensitivity(RDSseurat)
+      sensitivityAssigner <- subset(sensitivityAssigner, rownames(sensitivityAssigner) %in% tumorCells)
+      seurRDS_sensitivityAssigner(sensitivityAssigner)
+      #####
+      # set up groupings and construct design matrix...
+      snames <- colnames(testSpearman)
+      subjectID <- data.frame(subjectID = RDSseurat@meta.data[,input$subject_replicate_ident], row.names = rownames(RDSseurat@meta.data))
+      subjectID <- subjectID[which(rownames(subjectID) %in% rownames(testSpearman)),]
+
+      sensitivity <- data.frame(sensitivity = RDSseurat$sensitivity, row.names = colnames(RDSseurat))
+      # sensitivity <- subset(sensitivity, rownames(sensitivity) %in% tumorCells)
+      sensitivity <- sensitivity[which(rownames(sensitivity) %in% rownames(testSpearman)),]
+      # subject_group <- interaction(sensitivity$sensitivity, subjectID$subjectID)
+      sensitivity <- factor(sensitivity)
+      subjectID <- factor(subjectID)
+      design <- model.matrix(~ subjectID + sensitivity)
+      z_matrix <- t(z_matrix)
+      zmat(z_matrix)
+      fit <- lmFit(z_matrix, design)
+      fit <- eBayes(fit)
+      results <- topTable(fit, coef = 2, adjust.method = "fdr", number = Inf)
+      limmaRes(results)
+      print(head(results))
+      print(head(colnames(z_matrix)))
+    }
+  })
+
+  ##############################################################################
+
+  output$customTCS_limmaVolc <- renderPlot({
+    if (input$perturbationButton_customTCS >= 1){
+      res <- limmaRes_custTCS()
+      volc <- EnhancedVolcano(toptable = res, # title = paste0(input$Custom_TCS_nameInput, " induced alterations"),
+                              # subtitle = "fisher's Z transformation of raw connectivity values + limma",
+                              lab = rownames(res),
+                              x = "logFC",   xlab = bquote("Connectivity" ~Log[2] ~ "fold change"),
+                              y = "adj.P.Val", FCcutoff = 0.01, title = NULL, subtitle = NULL,
+                              xlim = c(min(res[["logFC"]], na.rm = TRUE) - 0.1, max(res[["logFC"]], na.rm = TRUE) + 0.1)
+                              # ylim = c(0, max(-log10(res[["adj.P.Val"]]), na.rm = TRUE) + 5)
+      )
+      volc_facet <- volc + ggforce::facet_zoom(xlim = c(min(res[["logFC"]], na.rm = TRUE) - 0.05,0))
+      volc_facet <- volc_facet + theme(panel.spacing.y = unit(0.1, "cm"))
+      volc_facet
+    }
+  })
+
+  output$l1000in_limmaVolc <- renderPlot({
+    if (input$perturbationButton >= 1){
+      res <- limmaRes()
+      volc <- EnhancedVolcano(toptable = res, # title = paste0(input$Custom_TCS_nameInput, " induced alterations"),
+                              # subtitle = "fisher's Z transformation of raw connectivity values + limma",
+                              lab = rownames(res),
+                              x = "logFC",   xlab = bquote("Connectivity" ~Log[2] ~ "fold change"),
+                              y = "adj.P.Val", FCcutoff = 0.01, title = NULL, subtitle = NULL,
+                              xlim = c(min(res[["logFC"]], na.rm = TRUE) - 0.1, max(res[["logFC"]], na.rm = TRUE) + 0.1)
+                              # ylim = c(0, max(-log10(res[["adj.P.Val"]]), na.rm = TRUE) + 5)
+                              )
+      volc_facet <- volc + ggforce::facet_zoom(xlim = c(min(res[["logFC"]], na.rm = TRUE) - 0.05,0))
+      volc_facet <- volc_facet + theme(panel.spacing.y = unit(0.1, "cm"))
+      volc_facet
+    }
+  })
+
+  output$download_customTCS_sensitivityAssigner <- downloadHandler(
+    filename = function() {
+      paste(input$Custom_TCS_nameInput, "_sensitivityByTCS_", Sys.Date(), ".csv", sep = "")
+    },
+    content = function(file) {
+      write.csv(seurRDS_customTCS_sensitivityAssigner(), file)
+
+    }
+  )
+
+  output$download_sensitivityAssigner <- downloadHandler(
+    filename = function() {
+      paste(input$referenceCompound, "_sensitivityByTCS_", Sys.Date(), ".csv", sep = "")
+    },
+    content = function(file) {
+      write.csv(seurRDS_sensitivityAssigner(), file)
+
+    }
+  )
+
+  output$download_customTCS_limmaVolc <- downloadHandler(
+    filename = function() {
+      paste(input$Custom_TCS_nameInput, "diffConnectivityVolcano_", Sys.Date(), ".pdf", sep = "")
+    },
+    content = function(file) {
+      res <- limmaRes_custTCS()
+      pdf(file, height = 14)
+      volc <- EnhancedVolcano(toptable = res, # title = paste0(input$Custom_TCS_nameInput, " induced alterations"),
+                              # subtitle = "fisher's Z transformation of raw connectivity values + limma",
+                              lab = rownames(res), title = NULL, subtitle = NULL,
+                              x = "logFC",   xlab = bquote("Connectivity" ~Log[2] ~ "fold change"),
+                              y = "adj.P.Val", FCcutoff = 0.01,
+                              xlim = c(min(res[["logFC"]], na.rm = TRUE) - 0.1, max(res[["logFC"]], na.rm = TRUE) + 0.1),
+                              ylim = c(0, max(-log10(res[["adj.P.Val"]]), na.rm = TRUE) + 5))
+      volc_facet <- volc + ggforce::facet_zoom(xlim = c(min(res[["logFC"]], na.rm = TRUE) - 0.05,0))
+      volc_facet <- volc_facet + theme(panel.spacing.y = unit(0.1, "cm"))
+      print(volc_facet)
+      dev.off()
+    }
+  )
+
+  output$download_limmaVolc <- downloadHandler(
+    filename = function() {
+      paste(input$referenceCompound, "diffConnectivityVolcano_", Sys.Date(), ".pdf", sep = "")
+    },
+    content = function(file) {
+      res <- limmaRes()
+      pdf(file, height = 14)
+      volc <- EnhancedVolcano(toptable = res, # title = paste0(input$Custom_TCS_nameInput, " induced alterations"),
+                              # subtitle = "fisher's Z transformation of raw connectivity values + limma",
+                              lab = rownames(res), title = NULL, subtitle = NULL,
+                              x = "logFC",   xlab = bquote("Connectivity" ~Log[2] ~ "fold change"),
+                              y = "adj.P.Val", FCcutoff = 0.01,
+                              xlim = c(min(res[["logFC"]], na.rm = TRUE) - 0.1, max(res[["logFC"]], na.rm = TRUE) + 0.1),
+                              ylim = c(0, max(-log10(res[["adj.P.Val"]]), na.rm = TRUE) + 5))
+      volc_facet <- volc + ggforce::facet_zoom(xlim = c(min(res[["logFC"]], na.rm = TRUE) - 0.05,0))
+      volc_facet <- volc_facet + theme(panel.spacing.y = unit(0.1, "cm"))
+      print(volc_facet)
+      dev.off()
+    }
+  )
+
+  mrc_custTCS <- reactiveVal()
+  resistMat_custTCS <- reactiveVal()
+  output$customTCS_rcm_overall <- renderPlot({
+    if (input$perturbationButton_customTCS >= 1){
+      zmat <- zmat_custTCS()
+      resistantCells <- resistantCells_customTCS()
+      tumorCells <- colnames(zmat)
+      resistMat <- zmat[,which(colnames(zmat) %in% resistantCells)]
+      resistMat_custTCS(resistMat)
+      mrc <- data.frame(mrc = rowMeans(resistMat), row.names = rownames(resistMat))
+      mrc$Group <- rownames(mrc)
+      mrc_custTCS(mrc)
+
+      # Create a barplot mapping the mrc values to fill.
+      ggplot(mrc, aes(x = reorder(Group, mrc), y = mrc, fill = mrc)) +
+        geom_bar(stat = "identity") +
+        scale_fill_viridis_c(option = "viridis", direction = -1) +
+        labs(x = "Group", y = "mrc",
+             title = paste0("Mean connectivities to ", input$Custom_TCS_nameInput, " resistant cells")) +
+        theme_minimal() +
+        theme(axis.text.x = element_text(angle = 45, hjust = 1))
+    }
+  })
+
+  mrc <- reactiveVal()
+  resistMat <- reactiveVal()
+  output$rcm_overall <- renderPlot({
+    if (input$perturbationButton >= 1){
+      zmat <- zmat()
+      resistantCells <- resistantCells()
+      tumorCells <- colnames(zmat)
+      resistMat <- zmat[,which(colnames(zmat) %in% resistantCells)]
+      resistMat(resistMat)
+      mrc <- data.frame(mrc = rowMeans(resistMat), row.names = rownames(resistMat))
+      mrc$Group <- rownames(mrc)
+      mrc(mrc)
+
+      # Create a barplot mapping the mrc values to fill.
+      ggplot(mrc, aes(x = reorder(Group, mrc), y = mrc, fill = mrc)) +
+        geom_bar(stat = "identity") +
+        scale_fill_viridis_c(option = "viridis", direction = -1) +
+        labs(x = "Group", y = "mrc",
+             title = paste0("Mean connectivities to ", input$referenceCompound, " resistant cells")) +
+        theme_minimal() +
+        theme(axis.text.x = element_text(angle = 45, hjust = 1))
+    }
+  })
+
+  combinationScoreDF_customTCS <- reactiveVal()
+  output$customTCS_combinationScoreBar <- renderPlot({
+    if (input$perturbationButton_customTCS >= 1){
+      mrc <- mrc_custTCS()
+      res <- limmaRes_custTCS()
+      mer <- merge(mrc, res, by.x = "Group", by.y = "row.names")
+      mer <- subset(mer, mer$logFC < 0 & mer$mrc < 0 & adj.P.Val < 0.05)
+      mer$combinationScore <- mer$logFC * mer$mrc
+      mer_sub <- mer[,c("Group", "mrc", "logFC", "combinationScore")]
+      combinationScoreDF_customTCS(mer_sub)
+
+      ggplot(mer, aes(x = reorder(Group, combinationScore), y = combinationScore, fill = combinationScore)) +
+        geom_bar(stat = "identity") +
+        scale_fill_viridis_c(option = "viridis", direction = -1) +
+        labs(x = "Group", y = "mrc",
+             title = paste0("scFOCAL combinations score for ", input$Custom_TCS_nameInput)) +
+        theme_minimal() +
+        theme(axis.text.x = element_text(angle = 45, hjust = 1))
+    }
+  })
+
+  combinationScoreDF <- reactiveVal()
+  output$combinationScoreBar <- renderPlot({
+    if (input$perturbationButton >= 1){
+      mrc <- mrc()
+      res <- limmaRes()
+      mer <- merge(mrc, res, by.x = "Group", by.y = "row.names")
+      mer <- subset(mer, mer$logFC < 0 & mer$mrc < 0 & adj.P.Val < 0.05)
+      mer$combinationScore <- mer$logFC * mer$mrc
+      mer_sub <- mer[,c("Group", "mrc", "logFC", "combinationScore")]
+      combinationScoreDF(mer_sub)
+
+      ggplot(mer, aes(x = reorder(Group, combinationScore), y = combinationScore, fill = combinationScore)) +
+        geom_bar(stat = "identity") +
+        scale_fill_viridis_c(option = "viridis", direction = -1) +
+        labs(x = "Group", y = "mrc",
+             title = paste0("scFOCAL combinations score for ", input$referenceCompound)) +
+        theme_minimal() +
+        theme(axis.text.x = element_text(angle = 45, hjust = 1))
+    }
+  })
+
+  output$customTCS_CombinationHeatmap <- renderPlot({
+    resistMat <- resistMat_custTCS()
+    ranking <- combinationScoreDF_customTCS()
+    resCells <- resistantCells_customTCS()
+    rank_top <- ranking[order(ranking$combinationScore, decreasing = T)[1:30],]
+    print(head(rank_top))
+    compound_list <- rank_top$Group
+    print(head(rownames(resistMat)))
+    print(head(colnames(resistMat)))
+    print(head(intersect(rownames(resistMat), compound_list)))
+    print(head(intersect(rownames(resistMat), compound_list)))
+    mat_list <- resistMat[which(rownames(resistMat) %in% compound_list),
+                          which(colnames(resistMat) %in% resCells)]
+    CombinationScore <- rowAnnotation(bar = anno_barplot(
+      as.numeric(rank_top$combinationScore)),
+      annotation_label = "Combination Score")
+    p <- Heatmap(mat_list,
+                 name = paste0(input$Custom_TCS_nameInput, " Combination Scoring"),
+                 left_annotation = CombinationScore, show_column_names = FALSE,
+                 row_names_rot = 30, row_names_gp = gpar(fontsize = 10))
+    p
+  })
+
+  output$CombinationHeatmap <- renderPlot({
+    resistMat <- resistMat()
+    ranking <- combinationScoreDF()
+    resCells <- resistantCells()
+    rank_top <- ranking[order(ranking$combinationScore, decreasing = T)[1:30],]
+    print(head(rank_top))
+    compound_list <- rank_top$Group
+    print(head(rownames(resistMat)))
+    print(head(colnames(resistMat)))
+    print(head(intersect(rownames(resistMat), compound_list)))
+    print(head(intersect(rownames(resistMat), compound_list)))
+    mat_list <- resistMat[which(rownames(resistMat) %in% compound_list),
+                          which(colnames(resistMat) %in% resCells)]
+    CombinationScore <- rowAnnotation(bar = anno_barplot(
+      as.numeric(rank_top$combinationScore)),
+      annotation_label = "Combination Score")
+    p <- Heatmap(mat_list,
+                 name = paste0(input$referenceCompound, " Combination Scoring"),
+                 left_annotation = CombinationScore, show_column_names = FALSE,
+                 row_names_rot = 30, row_names_gp = gpar(fontsize = 10))
+    p
+  })
+
+  output$customTCS_CombinationHeatmap_2 <- renderPlot({
+    resistMat <- resistMat_custTCS()
+    ranking <- combinationScoreDF_customTCS()
+    resCells <- resistantCells_customTCS()
+    rank_top <- ranking[order(ranking$combinationScore, decreasing = T),]
+    print(head(rank_top))
+    compound_list <- rank_top$Group
+    print(head(rownames(resistMat)))
+    print(head(colnames(resistMat)))
+    print(head(intersect(rownames(resistMat), compound_list)))
+    print(head(intersect(rownames(resistMat), compound_list)))
+    mat_list <- resistMat[which(rownames(resistMat) %in% compound_list),
+                          which(colnames(resistMat) %in% resCells)]
+    CombinationScore <- rowAnnotation(bar = anno_barplot(
+      as.numeric(rank_top$combinationScore)),
+      annotation_label = "Combination Score")
+    p <- Heatmap(mat_list,
+                 name = paste0(input$Custom_TCS_nameInput, " Combination Scoring"),
+                 left_annotation = CombinationScore, show_column_names = FALSE,
+                 show_row_names = F, cluster_rows = F)
+    # row_names_rot = 30, row_names_gp = gpar(fontsize = 10))
+    p
+  })
+
+  output$CombinationHeatmap_2 <- renderPlot({
+    resistMat <- resistMat()
+    ranking <- combinationScoreDF()
+    resCells <- resistantCells()
+    rank_top <- ranking[order(ranking$combinationScore, decreasing = T),]
+    print(head(rank_top))
+    compound_list <- rank_top$Group
+    print(head(rownames(resistMat)))
+    print(head(colnames(resistMat)))
+    print(head(intersect(rownames(resistMat), compound_list)))
+    print(head(intersect(rownames(resistMat), compound_list)))
+    mat_list <- resistMat[which(rownames(resistMat) %in% compound_list),
+                          which(colnames(resistMat) %in% resCells)]
+    CombinationScore <- rowAnnotation(bar = anno_barplot(
+      as.numeric(rank_top$combinationScore)),
+      annotation_label = "Combination Score")
+    p <- Heatmap(mat_list,
+                 name = paste0(input$referenceCompound, " Combination Scoring"),
+                 left_annotation = CombinationScore, show_column_names = FALSE,
+                 show_row_names = F, cluster_rows = F)
+    # row_names_rot = 30, row_names_gp = gpar(fontsize = 10))
+    p
+  })
+
+  output$customTCS_combinationScoreTable <- DT::renderDataTable({
+    DT::datatable(combinationScoreDF_customTCS())
+  })
+
+  output$combinationScoreTable <- DT::renderDataTable({
+    DT::datatable(combinationScoreDF())
+  })
+
+  observeEvent(input$customTCS_combinationTableButton, {
+    showModal(modalDialog(title = "Combination Scoring Data",
+                          tags$head(tags$style(".modal-dialog{ width:85% !important;}")),
+                          DT::dataTableOutput("customTCS_combinationScoreTable"),
+                          br(),
+                          "set up download option!!",
+                          easyClose = TRUE,
+                          footer = modalButton("Close")
+    ))
+  })
+
+  observeEvent(input$combinationTableButton, {
+    showModal(modalDialog(title = "Combination Scoring Data",
+                          tags$head(tags$style(".modal-dialog{ width:85% !important;}")),
+                          DT::dataTableOutput("combinationScoreTable"),
+                          br(),
+                          "set up download option!!",
+                          easyClose = TRUE,
+                          footer = modalButton("Close")
+    ))
+  })
+
+  output$combinationScoreDownload_customTCS <- downloadHandler(
+    filename = function() {
+      paste(input$Custom_TCS_nameInput, "_asRef_combinationScoreTable.csv", sep = "")
+    },
+    content = function(file) {
+      write.csv(combinationScoreDF_customTCS(), file, row.names = FALSE)
+    }
+  )
+
+  output$combinationScoreDownload <- downloadHandler(
+    filename = function() {
+      paste(input$referenceCompound, "_asRef_combinationScoreTable.csv", sep = "")
+    },
+    content = function(file) {
+      write.csv(combinationScoreDF(), file, row.names = FALSE)
+    }
+  )
+
 
   #################################################################################################
   # Calculate differential expression between sensitive and resistant cell populations
@@ -1591,7 +2404,7 @@ server <- function(input, output) {
     ResVsSensDEGS <- resVsSensDEGS()
     EnhancedVolcano(toptable = ResVsSensDEGS,
                     lab = rownames(ResVsSensDEGS),
-                    x = 'avg_log2FC', y = "p_val_adj",
+                    x = 'avg_log2FC', y = "p_val_adj", title = NULL, subtitle = NULL,
                     ylim = c(0, max(-log10(ResVsSensDEGS[["p_val_adj"]]), na.rm=TRUE) + 0.2)
     )
   })
@@ -1616,6 +2429,62 @@ server <- function(input, output) {
     return(!is.null(resVsSensDEGS()))
   })
   outputOptions(output, 'resVsSensCalced', suspendWhenHidden = FALSE)
+
+  # Custom TCS
+  ##############################################################################
+
+  resVsSensDEGS_customTCS <- reactiveVal()
+  observeEvent(input$calcSensVsResistantDEGS_customTCS, {
+    RDSseurat <- seurRDS_customTCSsensitivity()
+    RDSseurat <- SetIdent(RDSseurat, value = input$groupByRDS)
+    tumorCells <- WhichCells(RDSseurat, idents = input$cancerCellIdentsRDS)
+    tumorObj <- subset(RDSseurat, cells = tumorCells)
+    Idents(tumorObj) <- tumorObj$sensitivity
+    print(head(Idents(tumorObj)))
+    ResVsSensDEGS <- FindMarkers(tumorObj,
+                                 ident.1 = 'resistant', latent.vars = c(input$subject_replicate_ident),
+                                 ident.2 = 'sensitive',
+                                 test.use = input$pertDEx_testUse_customTCS,
+                                 only.pos = F,
+                                 max.cells.per.ident = input$cellSubsetMax_pert_customTCS
+    )
+    resVsSensDEGS_customTCS(ResVsSensDEGS)
+  })
+
+  # volcano plot
+  output$resVsSensVolcano_customTCS <- renderPlot({
+    req(resVsSensDEGS_customTCS())
+    ResVsSensDEGS <- resVsSensDEGS_customTCS()
+    EnhancedVolcano(toptable = ResVsSensDEGS,
+                    lab = rownames(ResVsSensDEGS),
+                    x = 'avg_log2FC', y = "p_val_adj",
+                    ylim = c(0, max(-log10(ResVsSensDEGS[["p_val_adj"]]), na.rm=TRUE) + 0.2)
+    )
+  })
+
+  # datatable
+  output$resVsSensTable_customTCS <- DT::renderDataTable({
+    resVsSensDEGS_customTCS()
+  })
+
+  # results download
+  output$resVsSensDEGSdownload_customTCS <- downloadHandler(
+    filename = function() {
+      paste(input$Custom_TCS_nameInput, "_resVsSensitive_DEGS.csv", sep = "")
+    },
+    content = function(file) {
+      write.csv(resVsSensDEGS_customTCS(), file, row.names = TRUE)
+    }
+  )
+
+  # conditional events
+  output$resVsSensCalced_customTCS <- reactive({
+    return(!is.null(resVsSensDEGS_customTCS()))
+  })
+  outputOptions(output, 'resVsSensCalced_customTCS', suspendWhenHidden = FALSE)
+
+
+  #####
 
   #################################################################################################
   #
@@ -1696,7 +2565,7 @@ server <- function(input, output) {
 
   ###########################################################################################
 
-  output$ISOSCELES_StateShiftAlluvial <- renderPlot({
+  output$scFOCAL_StateShiftAlluvial <- renderPlot({
     if (input$perturbationButton >= 1){ # How do we make this re-analyze when we change cutoff?
       # need to determine sensitive and resistant cells from previous calculation I think.
       # tumorCells <- tumorCells()
@@ -1736,8 +2605,8 @@ server <- function(input, output) {
       RDSseurat <- SetIdent(RDSseurat, value = input$groupByRDS)
       RDSseurat <- AddMetaData(RDSseurat, comparisonDF)
 
-      groupingCounts <- table(RDSseurat@meta.data[,input$groupByRDS],
-                              RDSseurat@meta.data[,"sensitivity"])
+      groupingCounts <- table(RDSseurat@meta.data[tumorCells,input$groupByRDS],
+                              RDSseurat@meta.data[tumorCells,"sensitivity"])
       sensitiveSum <- sum(groupingCounts[,"Sensitive"])
       resistantSum <- sum(groupingCounts[,"Resistant"])
       groupingCounts2 <- as.data.frame(groupingCounts)
@@ -1751,6 +2620,9 @@ server <- function(input, output) {
           groupingCounts2$Percent[i] <- groupingCounts2$Freq[i]/resistantSum*100
         }
       }
+
+      # groupingCounts2 <- groupingCounts2[which(is.na(groupingCounts2$sensitivity) != TRUE),]
+
       groupingCounts2$groupBy <- as.factor(groupingCounts2$groupBy)
       groupingCounts2$sensitivity <- factor(groupingCounts2$sensitivity, levels = c("Sensitive", "Resistant"))
 
@@ -1766,9 +2638,781 @@ server <- function(input, output) {
                   color = "darkgray") +
         geom_stratum() +
         theme(legend.position = "bottom") + theme_minimal() +
-        ggtitle("Grouping variable Shift")
+        ggtitle("Predicted cell type/state shift", subtitle = "Proportions of cell type/state split on drug connectivity")
 
     }
   })
+
+  output$scFOCAL_StateShiftAlluvial_customTCS <- renderPlot({
+    if (input$perturbationButton_customTCS >= 1){ # How do we make this re-analyze when we change cutoff?
+      # need to determine sensitive and resistant cells from previous calculation I think.
+      # tumorCells <- tumorCells()
+      # livingCells <- livingCellsRDS()
+      # deadCells <- deadCellsRDS()
+      RDSseurat <- seurRDS_customTCSsensitivity()
+      RDSseurat <- SetIdent(RDSseurat, value = input$groupByRDS)
+      tumorCells <- WhichCells(RDSseurat, idents = input$cancerCellIdentsRDS)
+      compoundSpearmans <- RDSseurat@meta.data[input$Custom_TCS_nameInput]
+      compoundSpearmans <- subset(compoundSpearmans, rownames(compoundSpearmans) %in% tumorCells)
+
+      # living <- subset(compoundSpearmans,
+      #                  subset = compoundSpearmans[input$referenceCompound] > input$correlationCutoff_RDS)
+      # dead <- subset(compoundSpearmans,
+      #                subset = compoundSpearmans[input$referenceCompound] < input$correlationCutoff_RDS)
+      # livingCells <- rownames(living)
+      # deadCells <- rownames(dead)
+
+      livingCells <- resistantCells_customTCS()
+      deadCells <- sensitiveCells_customTCS()
+
+      # Need to assign sensitivity or resistance as a new identity in @meta.data
+      livingDF <- as.data.frame(livingCells)
+      print("livingDF")
+      print(livingDF)
+      livingDF$sensitivity <- "Resistant"
+      colnames(livingDF) <- c("cellID", "sensitivity")
+
+      deadDF <- as.data.frame(deadCells)
+      deadDF$sensitivity <- "Sensitive"
+      colnames(deadDF) <- c("cellID", "sensitivity")
+
+      comparisonDF <- rbind(livingDF, deadDF)
+      rownames(comparisonDF) <- comparisonDF$cellID
+      comparisonDF$cellID <- NULL
+
+      print(head(comparisonDF))
+
+
+      RDSseurat <- SetIdent(RDSseurat, value = input$groupByRDS)
+      RDSseurat <- AddMetaData(RDSseurat, comparisonDF)
+
+      groupingCounts <- table(RDSseurat@meta.data[tumorCells,input$groupByRDS],
+                              RDSseurat@meta.data[tumorCells,"sensitivity"])
+      sensitiveSum <- sum(groupingCounts[,"Sensitive"])
+      resistantSum <- sum(groupingCounts[,"Resistant"])
+      groupingCounts2 <- as.data.frame(groupingCounts)
+
+      colnames(groupingCounts2) <- c("groupBy", "sensitivity", "Freq")
+      for (i in 1:length(groupingCounts2$Freq)){
+        if (groupingCounts2$sensitivity[i] == "Sensitive"){
+          groupingCounts2$Percent[i] <- groupingCounts2$Freq[i]/sensitiveSum*100
+        }
+        if (groupingCounts2$sensitivity[i] == "Resistant"){
+          groupingCounts2$Percent[i] <- groupingCounts2$Freq[i]/resistantSum*100
+        }
+      }
+
+      # groupingCounts2 <- groupingCounts2[which(is.na(groupingCounts2$sensitivity) != TRUE),]
+
+      groupingCounts2$groupBy <- as.factor(groupingCounts2$groupBy)
+      groupingCounts2$sensitivity <- factor(groupingCounts2$sensitivity, levels = c("Sensitive", "Resistant"))
+
+      library(ggalluvial)
+      # is_alluvia_form(groupingCounts2)
+      ggplot(groupingCounts2,
+             aes(x = sensitivity, stratum = groupBy, alluvium = groupBy,
+                 y = Percent,
+                 fill = groupBy, label = groupBy)) +
+        scale_fill_brewer(type = "qual", palette = "Spectral") +
+        # scale_fill_discrete(guide = guide_legend(reverse = TRUE)) +
+        geom_flow(stat = "alluvium", lode.guidance = "frontback",
+                  color = "darkgray") +
+        geom_stratum() +
+        theme(legend.position = "bottom") + theme_minimal() +
+        ggtitle("Predicted cell type/state shift", subtitle = "Proportions of cell type/state split on drug connectivity")
+
+    }
+  })
+
+
+  # Create paired boxplot comparisons for stats....
+  # output$customTCS_pertBoxPlots <- renderPlot({
+  #   if (input$perturbationButton_customTCS >= 1){
+  #     RDSseurat <- seurRDS_sensitivity()
+  #     RDSseurat <- SetIdent(RDSseurat, value = input$groupByRDS)
+  #     tumorCells <- WhichCells(RDSseurat, idents = input$cancerCellIdentsRDS)
+  #     compoundSpearmans <- RDSseurat@meta.data[input$Custom_TCS_nameInput]
+  #     compoundSpearmans <- subset(compoundSpearmans, rownames(compoundSpearmans) %in% tumorCells)
+  #
+  #     livingCells <- resistantCells_customTCS()
+  #     deadCells <- sensitiveCells_customTCS()
+  #
+  #     # Need to assign sensitivity or resistance as a new identity in @meta.data
+  #     livingDF <- as.data.frame(livingCells)
+  #     livingDF$sensitivity <- "Resistant"
+  #     colnames(livingDF) <- c("cellID", "sensitivity")
+  #     deadDF <- as.data.frame(deadCells)
+  #     deadDF$sensitivity <- "Sensitive"
+  #     colnames(deadDF) <- c("cellID", "sensitivity")
+  #     comparisonDF <- rbind(livingDF, deadDF)
+  #     rownames(comparisonDF) <- comparisonDF$cellID
+  #     comparisonDF$cellID <- NULL
+  #   }
+  # })
+
+  optimal_quantiles_calc <- reactive({
+    req(
+      seurat_corradded(), #
+      input$referenceCompound, #
+      input$subject_replicate_ident,
+      input$groupByRDS
+    )
+    if (input$perturbationButton >= 1){
+      obj <- seurRDSsensitivity()
+      obj <- SetIdent(obj, value = input$groupByRDS)
+      tumorCells <- WhichCells(obj, idents = input$cancerCellIdentsRDS)
+      # filter for tumor cells only...
+
+      # These are the column names you want to use, stored as strings
+      score_col <- input$referenceCompound
+      subject_col <- input$subject_replicate_ident
+      group_col <- input$groupByRDS
+
+      plot_data <- obj@meta.data[tumorCells, c(score_col, subject_col, group_col)]
+      quantiles_to_test <- seq(0.05, 0.45, by = 0.05)
+      iterative_results <- data.frame()
+      non_zero_scores <- plot_data[[score_col]][plot_data[[score_col]] != 0]
+
+      for (q in quantiles_to_test) {
+        thresholds <- quantile(non_zero_scores, probs = c(q, 1 - q), na.rm = TRUE)
+        temp_grouped_data <- plot_data %>%
+          mutate(compound_group = case_when(
+            .data[[score_col]] <= thresholds[1] ~ "Low",
+            .data[[score_col]] >= thresholds[2] ~ "High",
+            TRUE ~ "Middle"
+          ))
+
+        temp_proportions_df <- temp_grouped_data %>%
+          filter(compound_group %in% c("Low", "High")) %>%
+          # Use !!sym() to correctly evaluate the column names
+          group_by(!!sym(subject_col), compound_group, !!sym(group_col)) %>%
+          tally(name = "cell_count") %>%
+          ungroup() %>%
+          group_by(!!sym(subject_col), compound_group) %>%
+          mutate(proportion = cell_count / sum(cell_count)) %>%
+          ungroup() %>%
+          # Also correct it in complete()
+          complete(!!sym(subject_col), compound_group, !!sym(group_col), fill = list(proportion = 0, cell_count = 0))
+
+        test_results <- temp_proportions_df %>%
+          group_by(!!sym(group_col)) %>%
+          pivot_wider(names_from = compound_group, values_from = proportion) %>%
+          do({
+            test_res <- tryCatch({
+              # Check if there's enough data for a paired test
+              if(sum(!is.na(.$Low) & !is.na(.$High)) > 1) {
+                wilcox.test(.$Low, .$High, paired = TRUE)
+              } else {
+                list(p.value = 1.0)
+              }
+            }, error = function(e) {
+              list(p.value = 1.0)
+            })
+            data.frame(p_value = test_res$p.value)
+          }) %>%
+          ungroup() %>%
+          mutate(quantile = q)
+
+        iterative_results <- bind_rows(iterative_results, test_results)
+      }
+
+      # Identify and return the optimal quantile for each cell state
+      optimal_quantiles <- iterative_results %>%
+        group_by(!!sym(group_col)) %>%
+        slice_min(order_by = p_value, n = 1)
+
+      return(optimal_quantiles)
+    }
+  })
+
+
+  optimal_quantiles_calc_customTCS <- reactive({
+    req(
+      seurRDS_customTCSsensitivity(),
+      input$Custom_TCS_nameInput,
+      input$subject_replicate_ident,
+      input$groupByRDS
+    )
+    if (input$perturbationButton_customTCS >= 1){
+      obj <- seurRDS_customTCSsensitivity()
+      obj <- SetIdent(obj, value = input$groupByRDS)
+      tumorCells <- WhichCells(obj, idents = input$cancerCellIdentsRDS)
+      # filter for tumor cells only...
+
+      # These are the column names you want to use, stored as strings
+      score_col <- input$Custom_TCS_nameInput
+      subject_col <- input$subject_replicate_ident
+      group_col <- input$groupByRDS
+
+      plot_data <- obj@meta.data[tumorCells, c(score_col, subject_col, group_col)]
+      quantiles_to_test <- seq(0.05, 0.45, by = 0.05)
+      iterative_results <- data.frame()
+      non_zero_scores <- plot_data[[score_col]][plot_data[[score_col]] != 0]
+
+      for (q in quantiles_to_test) {
+        thresholds <- quantile(non_zero_scores, probs = c(q, 1 - q), na.rm = TRUE)
+        temp_grouped_data <- plot_data %>%
+          mutate(compound_group = case_when(
+            .data[[score_col]] <= thresholds[1] ~ "Low",
+            .data[[score_col]] >= thresholds[2] ~ "High",
+            TRUE ~ "Middle"
+          ))
+
+        temp_proportions_df <- temp_grouped_data %>%
+          filter(compound_group %in% c("Low", "High")) %>%
+          # Use !!sym() to correctly evaluate the column names
+          group_by(!!sym(subject_col), compound_group, !!sym(group_col)) %>%
+          tally(name = "cell_count") %>%
+          ungroup() %>%
+          group_by(!!sym(subject_col), compound_group) %>%
+          mutate(proportion = cell_count / sum(cell_count)) %>%
+          ungroup() %>%
+          # Also correct it in complete()
+          complete(!!sym(subject_col), compound_group, !!sym(group_col), fill = list(proportion = 0, cell_count = 0))
+
+        test_results <- temp_proportions_df %>%
+          group_by(!!sym(group_col)) %>%
+          pivot_wider(names_from = compound_group, values_from = proportion) %>%
+          do({
+            test_res <- tryCatch({
+              # Check if there's enough data for a paired test
+              if(sum(!is.na(.$Low) & !is.na(.$High)) > 1) {
+                wilcox.test(.$Low, .$High, paired = TRUE)
+              } else {
+                list(p.value = 1.0)
+              }
+            }, error = function(e) {
+              list(p.value = 1.0)
+            })
+            data.frame(p_value = test_res$p.value)
+          }) %>%
+          ungroup() %>%
+          mutate(quantile = q)
+
+        iterative_results <- bind_rows(iterative_results, test_results)
+      }
+
+      # Identify and return the optimal quantile for each cell state
+      optimal_quantiles <- iterative_results %>%
+        group_by(!!sym(group_col)) %>%
+        slice_min(order_by = p_value, n = 1)
+
+      return(optimal_quantiles)
+    }
+  })
+
+  # Add this new observe block for debugging purposes
+  observe({
+    # Use the same req() checks as your main reactive
+    req(
+      seurRDS_customTCSsensitivity(),
+      input$Custom_TCS_nameInput,
+      input$subject_replicate_ident,
+      input$groupBy_RDS
+    )
+
+    # Trigger this observer when the button is clicked
+    req(input$perturbationButton_customTCS >= 1)
+
+    # Prepare the data frame just for printing
+    obj <- seurRDS_customTCSsensitivity()
+
+    score_col <- input$Custom_TCS_nameInput
+    subject_col <- input$subject_replicate_ident
+    group_col <- input$groupBy_RDS
+
+    # Ensure columns exist before trying to select them
+    req(all(c(score_col, subject_col, group_col) %in% colnames(obj@meta.data)))
+
+    plot_data <- obj@meta.data[, c(score_col, subject_col, group_col)]
+
+    # cat("--- Debugging plot_data ---\n")
+    # dplyr::glimpse(plot_data)
+    # cat("---------------------------\n\n")
+
+  })
+
+  # observe({
+  #   # Use the same req() checks as your main reactive
+  #   req(
+  #     seurat_corradded(),
+  #     input$referenceCompound,
+  #     input$subject_replicate_ident,
+  #     input$groupBy_RDS
+  #   )
+  #
+  #   # Trigger this observer when the button is clicked
+  #   req(input$perturbationButton >= 1)
+  #
+  #   # Prepare the data frame just for printing
+  #   obj <- seurat_corradded()
+  #
+  #   score_col <- input$referenceCompound
+  #   subject_col <- input$subject_replicate_ident
+  #   group_col <- input$groupBy_RDS
+  #
+  #   # Ensure columns exist before trying to select them
+  #   req(all(c(score_col, subject_col, group_col) %in% colnames(obj@meta.data)))
+  #
+  #   plot_data <- obj@meta.data[, c(score_col, subject_col, group_col)]
+  #
+  #   # This will now print to your R console every time the inputs change
+  #   cat("--- Debugging plot_data ---\n")
+  #   dplyr::glimpse(plot_data)
+  #   cat("---------------------------\n\n")
+  #
+  # })
+
+  ##############################################################################
+
+  # output$optimal_quantiles_output <- DT::renderDT({
+  #   optimal_quantiles_calc()
+  # }, options = list(pageLength = 5), rownames = FALSE)
+
+  # 4. Main renderPlot() function for visualization
+  output$main_plot <- renderPlot({
+
+    # --- DATA PREPARATION ---
+    # Use the same req() checks to ensure all inputs are ready
+    req(
+      seurat_corradded(),
+      input$referenceCompound,
+      input$subject_replicate_ident,
+      input$groupByRDS,
+      input$quantile_slider # Also require the slider input
+    )
+
+    # Ensure the button has been clicked before trying to plot
+    req(input$perturbationButton >= 1)
+
+    obj <- seurat_corradded()
+    obj <- SetIdent(obj, value = input$groupByRDS)
+    tumorCells <- WhichCells(obj, idents = input$cancerCellIdentsRDS)
+
+    # Get column names from the correct inputs
+    score_col <- input$referenceCompound
+    subject_col <- input$subject_replicate_ident
+    group_col <- input$groupByRDS
+
+    # Extract metadata, filtering for tumor cells
+    plot_data <- obj@meta.data[tumorCells, c(score_col, subject_col, group_col)]
+
+    # Get the quantile from the slider input
+    q_selected <- input$quantile_slider / 100
+
+    non_zero_scores <- plot_data[[score_col]][plot_data[[score_col]] != 0]
+
+    # Calculate thresholds based on the selected quantile
+    thresholds <- quantile(non_zero_scores, probs = c(q_selected, 1 - q_selected), na.rm = TRUE)
+    q_low_threshold <- thresholds[1]
+    q_high_threshold <- thresholds[2]
+
+    # Create grouping column with descriptive names
+    low_group_name <- paste0("Low (Bottom ", q_selected * 100, "%)")
+    high_group_name <- paste0("High (Top ", q_selected * 100, "%)")
+
+    grouped_data_for_plot <- plot_data %>%
+      mutate(compound_group = case_when(
+        .data[[score_col]] <= q_low_threshold ~ low_group_name,
+        .data[[score_col]] >= q_high_threshold ~ high_group_name,
+        TRUE ~ "Middle"
+      ))
+
+    proportions_for_plot_df <- grouped_data_for_plot %>%
+      filter(compound_group != "Middle") %>%
+      group_by(!!sym(subject_col), compound_group, !!sym(group_col)) %>%
+      tally(name = "cell_count") %>%
+      ungroup() %>%
+      group_by(!!sym(subject_col), compound_group) %>%
+      mutate(proportion = cell_count / sum(cell_count)) %>%
+      ungroup() %>%
+      complete(!!sym(subject_col), compound_group, !!sym(group_col), fill = list(proportion = 0, cell_count = 0)) %>%
+      filter(compound_group != "Middle") %>%
+      mutate(compound_group = factor(compound_group, levels = c(low_group_name, high_group_name)))
+
+    # --- PLOT GENERATION ---
+
+    # Plot 1: Histogram of scores
+    color_map <- setNames(c("blue", "red", "gray"), c(low_group_name, high_group_name, "Middle"))
+    h <- ggplot(grouped_data_for_plot, aes(x = .data[[score_col]], fill = compound_group)) +
+      geom_histogram(bins = 100, alpha = 0.8) +
+      scale_fill_manual(values = color_map, name = "Quantile Group") +
+      labs(title = paste("Distribution of", score_col, "Scores"), x = paste(score_col, "Score"), y = "Cell Count") +
+      theme_bw() +
+      theme(plot.title = element_text(hjust = 0.5), legend.position = "bottom")
+
+    # Plot 2: Boxplot of proportions
+    p <- ggplot(proportions_for_plot_df, aes(x = compound_group, y = proportion, fill = compound_group)) +
+      geom_boxplot(outlier.shape = NA, alpha = 0.5) +
+      geom_line(aes(group = .data[[subject_col]]), color = "gray50", alpha = 0.8) + # Corrected group aesthetic
+      geom_point(size = 2.5, aes(color = compound_group)) +
+      stat_compare_means(method = "wilcox.test", label = "p.format", paired = TRUE) +
+      facet_wrap(vars(!!sym(group_col)), scales = "free_y", nrow = 1) + # Corrected facet_wrap
+      labs(title = paste("Proportions at Quantile Cutoff:", q_selected * 100, "%"), x = NULL, y = "Proportion") +
+      theme_bw() +
+      theme(strip.text = element_text(face = "bold"),
+            plot.title = element_text(hjust = 0.5),
+            axis.text.x = element_text(angle = 45, hjust = 1),
+            legend.position = "none")
+
+    # Plot 3: Difference plot
+    diff_df <- proportions_for_plot_df %>%
+      select(!!sym(subject_col), compound_group, !!sym(group_col), proportion) %>%
+      pivot_wider(names_from = compound_group, values_from = proportion) %>%
+      mutate(prop_diff = (.data[[high_group_name]] - .data[[low_group_name]]) * 100) %>%
+      filter(.data[[group_col]] != "Non-Neoplastic")
+
+    d <- ggplot(diff_df, aes(x = .data[[group_col]], y = prop_diff, fill = .data[[group_col]])) +
+      geom_boxplot(outlier.shape = NA, alpha = 0.4) +
+      geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+      stat_compare_means(method = "wilcox.test", label = "p.format") +
+      labs(title = "Difference in Proportion", subtitle = "(High - Low)", x = NULL, y = "Difference (% points)") +
+      theme_bw() +
+      theme(plot.title = element_text(hjust = 0.5),
+            plot.subtitle = element_text(hjust = 0.5),
+            axis.text.x = element_text(angle = 45, hjust = 1),
+            legend.position = "none")
+
+    # --- COMBINE PLOTS AND RETURN ---
+
+    # Combine the plots into a single figure using cowplot
+    c1 <- cowplot::plot_grid(h, d, ncol = 2, rel_widths = c(1,1))
+    combined_row <- cowplot::plot_grid(c1, p, ncol = 1)
+
+    # Return the final combined plot to be rendered
+    return(combined_row)
+
+  }, res = 110) # Set resolution for a sharper plot
+
+
+  output$optimal_quantiles_output_customTCS <- DT::renderDT({
+    optimal_quantiles_calc_customTCS()
+  }, options = list(pageLength = 5), rownames = FALSE)
+
+  # 4. Main renderPlot() function for visualization
+  output$main_plot_customTCS <- renderPlot({
+
+    # --- DATA PREPARATION ---
+    # Use the same req() checks to ensure all inputs are ready
+    req(
+      seurRDS_customTCSsensitivity(),
+      input$Custom_TCS_nameInput,
+      input$subject_replicate_ident,
+      input$groupByRDS,
+      input$quantile_slider_customTCS # Also require the slider input
+    )
+
+    # Ensure the button has been clicked before trying to plot
+    req(input$perturbationButton_customTCS >= 1)
+
+    obj <- seurRDS_customTCSsensitivity()
+    obj <- SetIdent(obj, value = input$groupByRDS)
+    tumorCells <- WhichCells(obj, idents = input$cancerCellIdentsRDS)
+
+    # Get column names from the correct inputs
+    score_col <- input$Custom_TCS_nameInput
+    subject_col <- input$subject_replicate_ident
+    group_col <- input$groupByRDS
+
+    # Extract metadata, filtering for tumor cells
+    plot_data <- obj@meta.data[tumorCells, c(score_col, subject_col, group_col)]
+
+    # Get the quantile from the slider input
+    q_selected <- input$quantile_slider_customTCS / 100
+
+    non_zero_scores <- plot_data[[score_col]][plot_data[[score_col]] != 0]
+
+    # Calculate thresholds based on the selected quantile
+    thresholds <- quantile(non_zero_scores, probs = c(q_selected, 1 - q_selected), na.rm = TRUE)
+    q_low_threshold <- thresholds[1]
+    q_high_threshold <- thresholds[2]
+
+    # Create grouping column with descriptive names
+    low_group_name <- paste0("Low (Bottom ", q_selected * 100, "%)")
+    high_group_name <- paste0("High (Top ", q_selected * 100, "%)")
+
+    grouped_data_for_plot <- plot_data %>%
+      mutate(compound_group = case_when(
+        .data[[score_col]] <= q_low_threshold ~ low_group_name,
+        .data[[score_col]] >= q_high_threshold ~ high_group_name,
+        TRUE ~ "Middle"
+      ))
+
+    proportions_for_plot_df <- grouped_data_for_plot %>%
+      filter(compound_group != "Middle") %>%
+      group_by(!!sym(subject_col), compound_group, !!sym(group_col)) %>%
+      tally(name = "cell_count") %>%
+      ungroup() %>%
+      group_by(!!sym(subject_col), compound_group) %>%
+      mutate(proportion = cell_count / sum(cell_count)) %>%
+      ungroup() %>%
+      complete(!!sym(subject_col), compound_group, !!sym(group_col), fill = list(proportion = 0, cell_count = 0)) %>%
+      filter(compound_group != "Middle") %>%
+      mutate(compound_group = factor(compound_group, levels = c(low_group_name, high_group_name)))
+
+    # --- PLOT GENERATION ---
+
+    # Plot 1: Histogram of scores
+    color_map <- setNames(c("blue", "red", "gray"), c(low_group_name, high_group_name, "Middle"))
+    h <- ggplot(grouped_data_for_plot, aes(x = .data[[score_col]], fill = compound_group)) +
+      geom_histogram(bins = 100, alpha = 0.8) +
+      scale_fill_manual(values = color_map, name = "Quantile Group") +
+      labs(title = paste("Distribution of", score_col, "Scores"), x = paste(score_col, "Score"), y = "Cell Count") +
+      theme_bw() +
+      theme(plot.title = element_text(hjust = 0.5), legend.position = "bottom")
+
+    # Plot 2: Boxplot of proportions
+    p <- ggplot(proportions_for_plot_df, aes(x = compound_group, y = proportion, fill = compound_group)) +
+      geom_boxplot(outlier.shape = NA, alpha = 0.5) +
+      geom_line(aes(group = .data[[subject_col]]), color = "gray50", alpha = 0.8) + # Corrected group aesthetic
+      geom_point(size = 2.5, aes(color = compound_group)) +
+      stat_compare_means(method = "wilcox.test", label = "p.format", paired = TRUE) +
+      facet_wrap(vars(!!sym(group_col)), scales = "free_y", nrow = 1) + # Corrected facet_wrap
+      labs(title = paste("Proportions at Quantile Cutoff:", q_selected * 100, "%"), x = NULL, y = "Proportion") +
+      theme_bw() +
+      theme(strip.text = element_text(face = "bold"),
+            plot.title = element_text(hjust = 0.5),
+            axis.text.x = element_text(angle = 45, hjust = 1),
+            legend.position = "none")
+
+    # Plot 3: Difference plot
+    diff_df <- proportions_for_plot_df %>%
+      select(!!sym(subject_col), compound_group, !!sym(group_col), proportion) %>%
+      pivot_wider(names_from = compound_group, values_from = proportion) %>%
+      mutate(prop_diff = (.data[[high_group_name]] - .data[[low_group_name]]) * 100) %>%
+      filter(.data[[group_col]] != "Non-Neoplastic")
+
+    d <- ggplot(diff_df, aes(x = .data[[group_col]], y = prop_diff, fill = .data[[group_col]])) +
+      geom_boxplot(outlier.shape = NA, alpha = 0.4) +
+      geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+      stat_compare_means(method = "wilcox.test", label = "p.format") +
+      labs(title = "Difference in Proportion", subtitle = "(High - Low)", x = NULL, y = "Difference (% points)") +
+      theme_bw() +
+      theme(plot.title = element_text(hjust = 0.5),
+            plot.subtitle = element_text(hjust = 0.5),
+            axis.text.x = element_text(angle = 45, hjust = 1),
+            legend.position = "none")
+
+    # --- COMBINE PLOTS AND RETURN ---
+
+    # Combine the plots into a single figure using cowplot
+    c1 <- cowplot::plot_grid(h, d, ncol = 2, rel_widths = c(1,1))
+    combined_row <- cowplot::plot_grid(c1, p, ncol = 1)
+
+    # Return the final combined plot to be rendered
+    return(combined_row)
+
+  }, res = 110) # Set resolution for a sharper plot
+
+  ##
+
+  # 4. Main renderPlot() function for visualization
+  output$main_plot_userSet <- renderPlot({
+
+    # --- DATA PREPARATION ---
+    # Use the same req() checks, but for the new value slider
+    req(
+      seurat_corradded(),
+      input$referenceCompound,
+      input$subject_replicate_ident,
+      input$groupByRDS,
+      input$value_slider
+    )
+
+    # Ensure the button has been clicked before trying to plot
+    req(input$perturbationButton >= 1)
+
+    obj <- seurat_corradded()
+    obj <- SetIdent(obj, value = input$groupByRDS)
+    tumorCells <- WhichCells(obj, idents = input$cancerCellIdentsRDS)
+
+    # Get column names from the correct inputs
+    score_col <- input$Custom_TCS_nameInput
+    subject_col <- input$subject_replicate_ident
+    group_col <- input$groupByRDS
+
+    # Extract metadata, filtering for tumor cells
+    plot_data <- obj@meta.data[tumorCells, c(score_col, subject_col, group_col)]
+
+    q_low_threshold <- input$correlationCutoff[1]
+    q_high_threshold <- input$correlationCutoff[2]
+
+    # Create grouping column with descriptive names based on values
+    low_group_name <- paste0("Score <= ", round(q_low_threshold, 2))
+    high_group_name <- paste0("Score >= ", round(q_high_threshold, 2))
+    # --------------------------------------------------------------------
+
+    # Use .data pronoun for the score column
+    grouped_data_for_plot <- plot_data %>%
+      mutate(compound_group = case_when(
+        .data[[score_col]] <= q_low_threshold ~ low_group_name,
+        .data[[score_col]] >= q_high_threshold ~ high_group_name,
+        TRUE ~ "Middle"
+      ))
+
+    proportions_for_plot_df <- grouped_data_for_plot %>%
+      filter(compound_group != "Middle") %>%
+      group_by(!!sym(subject_col), compound_group, !!sym(group_col)) %>%
+      tally(name = "cell_count") %>%
+      ungroup() %>%
+      group_by(!!sym(subject_col), compound_group) %>%
+      mutate(proportion = cell_count / sum(cell_count)) %>%
+      ungroup() %>%
+      complete(!!sym(subject_col), compound_group, !!sym(group_col), fill = list(proportion = 0, cell_count = 0)) %>%
+      filter(compound_group != "Middle") %>%
+      mutate(compound_group = factor(compound_group, levels = c(low_group_name, high_group_name)))
+
+    # --- PLOT GENERATION ---
+
+    # Plot 1: Histogram of scores
+    color_map <- setNames(c("blue", "red", "gray"), c(low_group_name, high_group_name, "Middle"))
+    h <- ggplot(grouped_data_for_plot, aes(x = .data[[score_col]], fill = compound_group)) +
+      geom_histogram(bins = 100, alpha = 0.8) +
+      scale_fill_manual(values = color_map, name = "Cutoff Group") +
+      labs(title = paste("Distribution of", score_col, "Scores"), x = paste(score_col, "Score"), y = "Cell Count") +
+      theme_bw() +
+      theme(plot.title = element_text(hjust = 0.5), legend.position = "bottom")
+
+    # Plot 2: Boxplot of proportions
+    p <- ggplot(proportions_for_plot_df, aes(x = compound_group, y = proportion, fill = compound_group)) +
+      geom_boxplot(outlier.shape = NA, alpha = 0.5) +
+      geom_line(aes(group = .data[[subject_col]]), color = "gray50", alpha = 0.8) +
+      geom_point(size = 2.5, aes(color = compound_group)) +
+      stat_compare_means(method = "wilcox.test", label = "p.format", paired = TRUE) +
+      facet_wrap(vars(!!sym(group_col)), scales = "free_y", nrow = 1) +
+      labs(title = paste("Proportions by Score Cutoff"), x = NULL, y = "Proportion") + # Updated title
+      theme_bw() +
+      theme(strip.text = element_text(face = "bold"),
+            plot.title = element_text(hjust = 0.5),
+            axis.text.x = element_text(angle = 45, hjust = 1),
+            legend.position = "none")
+
+    # Plot 3: Difference plot (no major changes needed here)
+    diff_df <- proportions_for_plot_df %>%
+      select(!!sym(subject_col), compound_group, !!sym(group_col), proportion) %>%
+      pivot_wider(names_from = compound_group, values_from = proportion) %>%
+      mutate(prop_diff = (.data[[high_group_name]] - .data[[low_group_name]]) * 100) %>%
+      filter(.data[[group_col]] != "Non-Neoplastic")
+
+    d <- ggplot(diff_df, aes(x = .data[[group_col]], y = prop_diff, fill = .data[[group_col]])) +
+      geom_boxplot(outlier.shape = NA, alpha = 0.4) +
+      geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+      stat_compare_means(method = "wilcox.test", label = "p.format") +
+      labs(title = "Difference in Proportion", subtitle = "(High - Low)", x = NULL, y = "Difference (% points)") +
+      theme_bw() +
+      theme(plot.title = element_text(hjust = 0.5),
+            plot.subtitle = element_text(hjust = 0.5),
+            axis.text.x = element_text(angle = 45, hjust = 1),
+            legend.position = "none")
+
+    # --- COMBINE PLOTS AND RETURN ---
+    c1 <- cowplot::plot_grid(h, d, ncol = 2, rel_widths = c(1,1))
+    combined_row <- cowplot::plot_grid(c1, p, ncol = 1)
+    return(combined_row)
+
+  }, res = 110)
+
+  output$main_plot_userSet_customTCS <- renderPlot({
+
+    # --- DATA PREPARATION ---
+    # Use the same req() checks, but for the new value slider
+    req(
+      seurRDS_customTCSsensitivity(),
+      input$Custom_TCS_nameInput,
+      input$subject_replicate_ident,
+      input$groupByRDS,
+      input$value_slider)
+
+    # Ensure the button has been clicked before trying to plot
+    req(input$perturbationButton_customTCS >= 1)
+
+    obj <- seurRDS_customTCSsensitivity()
+    obj <- SetIdent(obj, value = input$groupByRDS)
+    tumorCells <- WhichCells(obj, idents = input$cancerCellIdentsRDS)
+
+    # Get column names from the correct inputs
+    score_col <- input$Custom_TCS_nameInput
+    subject_col <- input$subject_replicate_ident
+    group_col <- input$groupByRDS
+
+    # Extract metadata, filtering for tumor cells
+    plot_data <- obj@meta.data[tumorCells, c(score_col, subject_col, group_col)]
+
+    q_low_threshold <- input$correlationCutoff_customTCS[1]
+    q_high_threshold <- input$correlationCutoff_customTCS[2]
+
+    # Create grouping column with descriptive names based on values
+    low_group_name <- paste0("Score <= ", round(q_low_threshold, 2))
+    high_group_name <- paste0("Score >= ", round(q_high_threshold, 2))
+    # --------------------------------------------------------------------
+
+    # Use .data pronoun for the score column
+    grouped_data_for_plot <- plot_data %>%
+      mutate(compound_group = case_when(
+        .data[[score_col]] <= q_low_threshold ~ low_group_name,
+        .data[[score_col]] >= q_high_threshold ~ high_group_name,
+        TRUE ~ "Middle"
+      ))
+
+    proportions_for_plot_df <- grouped_data_for_plot %>%
+      filter(compound_group != "Middle") %>%
+      group_by(!!sym(subject_col), compound_group, !!sym(group_col)) %>%
+      tally(name = "cell_count") %>%
+      ungroup() %>%
+      group_by(!!sym(subject_col), compound_group) %>%
+      mutate(proportion = cell_count / sum(cell_count)) %>%
+      ungroup() %>%
+      complete(!!sym(subject_col), compound_group, !!sym(group_col), fill = list(proportion = 0, cell_count = 0)) %>%
+      filter(compound_group != "Middle") %>%
+      mutate(compound_group = factor(compound_group, levels = c(low_group_name, high_group_name)))
+
+    # --- PLOT GENERATION ---
+
+    # Plot 1: Histogram of scores
+    color_map <- setNames(c("blue", "red", "gray"), c(low_group_name, high_group_name, "Middle"))
+    h <- ggplot(grouped_data_for_plot, aes(x = .data[[score_col]], fill = compound_group)) +
+      geom_histogram(bins = 100, alpha = 0.8) +
+      scale_fill_manual(values = color_map, name = "Cutoff Group") +
+      labs(title = paste("Distribution of", score_col, "Scores"), x = paste(score_col, "Score"), y = "Cell Count") +
+      theme_bw() +
+      theme(plot.title = element_text(hjust = 0.5), legend.position = "bottom")
+
+    # Plot 2: Boxplot of proportions
+    p <- ggplot(proportions_for_plot_df, aes(x = compound_group, y = proportion, fill = compound_group)) +
+      geom_boxplot(outlier.shape = NA, alpha = 0.5) +
+      geom_line(aes(group = .data[[subject_col]]), color = "gray50", alpha = 0.8) +
+      geom_point(size = 2.5, aes(color = compound_group)) +
+      stat_compare_means(method = "wilcox.test", label = "p.format", paired = TRUE) +
+      facet_wrap(vars(!!sym(group_col)), scales = "free_y", nrow = 1) +
+      labs(title = paste("Proportions by Score Cutoff"), x = NULL, y = "Proportion") + # Updated title
+      theme_bw() +
+      theme(strip.text = element_text(face = "bold"),
+            plot.title = element_text(hjust = 0.5),
+            axis.text.x = element_text(angle = 45, hjust = 1),
+            legend.position = "none")
+
+    # Plot 3: Difference plot (no major changes needed here)
+    diff_df <- proportions_for_plot_df %>%
+      select(!!sym(subject_col), compound_group, !!sym(group_col), proportion) %>%
+      pivot_wider(names_from = compound_group, values_from = proportion) %>%
+      mutate(prop_diff = (.data[[high_group_name]] - .data[[low_group_name]]) * 100) %>%
+      filter(.data[[group_col]] != "Non-Neoplastic")
+
+    d <- ggplot(diff_df, aes(x = .data[[group_col]], y = prop_diff, fill = .data[[group_col]])) +
+      geom_boxplot(outlier.shape = NA, alpha = 0.4) +
+      geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+      stat_compare_means(method = "wilcox.test", label = "p.format") +
+      labs(title = "Difference in Proportion", subtitle = "(High - Low)", x = NULL, y = "Difference (% points)") +
+      theme_bw() +
+      theme(plot.title = element_text(hjust = 0.5),
+            plot.subtitle = element_text(hjust = 0.5),
+            axis.text.x = element_text(angle = 45, hjust = 1),
+            legend.position = "none")
+
+    # --- COMBINE PLOTS AND RETURN ---
+    combined_row <- cowplot::plot_grid(h, p, d, ncol = 3, rel_widths = c(1, 5, 1.2))
+    return(combined_row)
+
+  }, res = 110)
 
 }
