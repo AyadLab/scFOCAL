@@ -32,7 +32,7 @@
 <br />
 <div align="center">
   <a href="https://github.com/AyadLab/scFOCAL">
-    <img src="R/www/scFOCAL.png" alt="Logo" width="800" height="200">
+    <img src="inst/shiny/www/scFOCAL.png" alt="Logo" width="800" height="200">
   </a>
 </div>
 
