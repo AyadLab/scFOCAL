@@ -180,10 +180,12 @@ library(shinydashboard)
 library(shinythemes)
 library(scales)
 library(ggforce)
+library(ggpubr)
 library(EnhancedVolcano)
 library(DT)
 library(lme4)
 library(edgeR)
+library(ComplexHeatmap)
 ```
 Some of these dependencies will need to be installed via Bioconductor.
 
