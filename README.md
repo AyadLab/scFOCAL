@@ -385,7 +385,7 @@ Project Link: [https://github.com/AyadLab/scFOCAL](https://github.com/AyadLab/sc
     <img src="images/Ayad lab.png" alt="Ayad Laboratory" width="300" height="300">
   </a>
   <a href="https://suterlab.com/">
-    <img src="images/SuterLabLogo.png" alt="Suter Laboratory" width = "310" height="310">
+    <img src="images/SuterLabLogo.png" alt="Suter Laboratory" width = "320" height="320">
   </a>
 </div>
 
