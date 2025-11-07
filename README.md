@@ -384,6 +384,9 @@ Project Link: [https://github.com/AyadLab/scFOCAL](https://github.com/AyadLab/sc
   <a href="https://sites.google.com/georgetown.edu/ayadlab/">
     <img src="images/Ayad lab.png" alt="Ayad Laboratory" width="300" height="300">
   </a>
+  <a href="https://suterlab.com/">
+    <img src="images/SuterLabLogo.png" alt="Suter Laboratory" width = "300" height="300">
+  </a>
 </div>
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
