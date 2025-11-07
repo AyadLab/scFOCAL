@@ -24,8 +24,10 @@
 #' @import scales
 #' @import ggforce
 #' @import EnhancedVolcano
+#' @import lme4
+#' @import edgeR
 #' @import DT
 #' @export
 runscFOCAL <- function() {
-  shiny::runApp(appDir = system.file('shiny', package = "scFOCAL"))
+  shiny::shinyAppDir(appDir = system.file('shiny', package = "scFOCAL"))
 }
