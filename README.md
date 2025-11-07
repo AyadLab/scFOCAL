@@ -59,6 +59,9 @@
   <summary>Table of Contents</summary>
   <ol>
     <li>
+      <a href="#License-agreement">License agreement</a>
+    </li>
+    <li>
       <a href="#about-scFOCAL">About scFOCAL</a>
       <!-- <ul>
         <li><a href="#built-with">Built With</a></li>
@@ -80,7 +83,7 @@
   </ol>
 </details>
 
-# License agreement
+## License agreement
 1. The Board of Trustees of the Georgetown University provides scFOCAL (Formerly ISOSCELES) software and code (“Service”) free of charge for non-commercial use only. Use of the Service by any commercial entity for any purpose, including research, is prohibited.
    
 3. By using the Service, you agree to be bound by the terms of this Agreement. Please read it carefully.
