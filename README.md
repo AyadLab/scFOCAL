@@ -179,6 +179,8 @@ library(scales)
 library(ggforce)
 library(EnhancedVolcano)
 library(DT)
+library(lme4)
+library(edgeR)
 ```
 Some of these dependencies will need to be installed via Bioconductor.
 
@@ -223,7 +225,7 @@ Once the R package is installed, launching the scFOCAL GUI is as easy as the fol
 
 ```{r}
 library(scFOCAL) # load the scFOCAL library including necessary drug signature data
-scFOCAL::run_scFOCAL() # launch the scFOCAL shiny GUI
+scFOCAL::runscFOCAL() # launch the scFOCAL shiny GUI
 ```
 -----
 ### Step 1. - Data Upload
