@@ -28,6 +28,7 @@
 #' @import lme4
 #' @import edgeR
 #' @import DT
+#' @import ComplexHeatmap
 #' @export
 runscFOCAL <- function() {
   shiny::shinyAppDir(appDir = system.file('shiny', package = "scFOCAL"))
