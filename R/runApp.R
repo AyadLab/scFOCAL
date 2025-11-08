@@ -4,6 +4,7 @@
 #' @import shiny
 #' @import Seurat
 #' @import ggplot2
+#' @import ggpubr
 #' @import tibble
 #' @import cowplot
 #' @import viridis
