@@ -70,7 +70,7 @@ ui <- fluidPage(
                  tags$i(class = "fa-sharp fa-solid fa-desktop"),
                  tags$span("- Overview"),
                  tags$style(type = "text/css", "li a{color:#000000;}")
-               ), img(src = "scSynergySeq Diagram (2).png", width = 500, height = 500)
+               ), img(src = "scSynergySeq Diagram (2).png", width = "100%")
                ),
 
                tabPanel(tags$div(
