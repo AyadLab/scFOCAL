@@ -1,14 +1,41 @@
 Package: scFOCAL
 Type: Package
-Title: What the Package Does (Title Case)
+Title: Integration of drug and single-cell gene expression signatures. 
 Version: 0.1.0
-Author: Who wrote it
-Maintainer: The package maintainer <yourself@somewhere.net>
-Description: More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
-License: What license is it under?
+Author: Robert K. Suter
+Maintainer: Robert K. Suter <rks82@georgetown.edu>
+Description: scFOCAL integrates small molecules transcriptional consensus signatures with single-cell gene expression data to identify cell states targeted or resistant to different perturbations. 
+    This information is leveraged by the scFOCAL combination index, which identifies synergistic combinations that maximize the discordance across a heterogenous tumor.
+License: Custom
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.3.2
 Depends: 
     R (>= 3.5)
+Imports:
+    DT,
+    EnhancedVolcano,
+    Hmisc,
+    MAST,
+    Seurat,
+    corrplot,
+    cowplot,
+    dplyr,
+    edgeR,
+    ggforce,
+    ggplot2,
+    ggrepel,
+    ggsci,
+    grid,
+    htmlwidgets,
+    lme4,
+    pheatmap,
+    plotly,
+    reshape2,
+    scales,
+    shiny,
+    shinydashboard,
+    shinythemes,
+    tibble,
+    tidyverse,
+    viridis
