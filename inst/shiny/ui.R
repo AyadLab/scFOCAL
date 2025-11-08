@@ -1402,43 +1402,52 @@ ui <- fluidPage(
                )
                ),
 
-               tabPanel(tags$div(
-                 tags$i(class="fa-sharp fa-solid fa-info"),
-                 tags$span("- Resources")
-               ), #put contents for FAQ here
-
-               wellPanel(
-                 h3("Other Resources from our laboratories:"),
-                 hr(),
-                 # a(href="synergyseq.com", "SynergySeq"),
-                 br(),
-                 # splitLayout(
-                 a(href="http://www.SynergySeq.com", "SynergySeq"),
-                 # h5("SynergySeq: Identify drug combinations that transcriptionally reverse a disease gene expression signature."),
-                 # ),
-                 br(),
-                 br(),
-                 # splitLayout(h4("Read the publication here: "),
-                 a(href= "https://www.nature.com/articles/s41467-018-07659-z", "Nature Communications 9, 5315")
-               )
+               # tabPanel(tags$div(
+               #   tags$i(class="fa-sharp fa-solid fa-info"),
+               #   tags$span("- Resources")
+               # ), #put contents for FAQ here
                #
+               # wellPanel(
+               #   h3("Other Resources from our laboratories:"),
+               #   hr(),
+               #   # a(href="synergyseq.com", "SynergySeq"),
+               #   br(),
+               #   # splitLayout(
+               #   a(href="http://www.SynergySeq.com", "SynergySeq"),
+               #   # h5("SynergySeq: Identify drug combinations that transcriptionally reverse a disease gene expression signature."),
+               #   # ),
+               #   br(),
+               #   br(),
+               #   # splitLayout(h4("Read the publication here: "),
+               #   a(href= "https://www.nature.com/articles/s41467-018-07659-z", "Nature Communications 9, 5315")
                # )
+               # #
+               # # )
+               #
+               # ),
 
-               ),
-
-               tabPanel(tags$div(
-                 tags$i(class="fa-sharp fa-solid fa-download"),
-                 tags$span("- Downloads")
-               ), #put contents for FAQ here
-               ),
+               # tabPanel(tags$div(
+               #   tags$i(class="fa-sharp fa-solid fa-download"),
+               #   tags$span("- Downloads")
+               # ), #put contents for FAQ here
+               # ),
 
                tabPanel(tags$div(
                  tags$i(class="fa-sharp fa-solid fa-envelope"),
                  tags$span("- Contact")
                ), #put contents for Contact here #scFOCAL.app@gmail.com
+
+               tags$h4(
+                 a(href = "https://github.com/AyadLab/scFOCAL",
+                   "For issues: Please report them on the scFOCAL git."),
+                 align = "center"
+               ),
+               hr(),
                splitLayout(
                  wellPanel(
-                   # hr(),
+                   # FIX 1: Center all content in the panel
+                   style = "text-align: center;",
+
                    br(),
                    p(strong("Robert K. Suter, PhD")),
                    p(em("Assistant Professor")),
@@ -1446,21 +1455,42 @@ ui <- fluidPage(
                    p(em("Lombardi Comprehensive Cancer Center")),
                    p(em("Georgetown University Medical Center")),
                    hr(),
-                   img(src = "rks_headshot_2022.png", width = 185, height = 160),
+
+                   # FIX 2: Set ONLY height (or width) to keep the aspect ratio
+                   img(src = "rks_headshot_2022.png", height = "160px"),
+
                    br(), br(),
-                   a(href="mailto:rks82@georgetown.edu", "Contact..."),
-                   a(href="https://suterlab.com", "SuterLab.com"),
+                   a(href="mailto:rks82@georgetown.edu", "Contact"),
+                   hr(), # Added a space so links don't touch
+                   tags$h4(
+                     a(href="https://suterlab.com", "SuterLab.com"),
+                     align = "center"
+                   ),
                    hr()
                  ),
+
                  wellPanel(
-                   # hr(),
+                   # FIX 1: Center all content in the panel
+                   style = "text-align: center;",
+
                    br(),
                    p(strong("Nagi G. Ayad, PhD")),
-                   p(em("Principal Investigator")),
+                   p(em("Professor")),
+                   p(em("Department of Oncology")),
+                   p(em("Lombardi Comprehensive Cancer Center")),
+                   p(em("Georgetown University Medical Center")),
                    hr(),
-                   img(src = "nagi_headshot.png", width = 92.5, height = 160),
+
+                   # FIX 2: Set ONLY height (or width) to keep the aspect ratio
+                   img(src = "nagi_headshot.png", height = "160px"),
+
                    br(), br(),
-                   a(href="mailto:na853@georgetown.edu", "Contact..."),
+                   a(href="mailto:na853@georgetown.edu", "Contact"),
+                   hr(),
+                   tags$h4(
+                     a(href="https://sites.google.com/georgetown.edu/ayadlab/home", "AyadLab.com"),
+                     align = "center"
+                   ),
                    hr()
                  )
                )
