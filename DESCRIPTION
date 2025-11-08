@@ -38,4 +38,5 @@ Imports:
     shinythemes,
     tibble,
     tidyverse,
-    viridis
+    viridis,
+    ggpubr
