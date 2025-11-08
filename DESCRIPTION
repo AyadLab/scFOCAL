@@ -39,4 +39,5 @@ Imports:
     tibble,
     tidyverse,
     viridis,
-    ggpubr
+    ggpubr,
+    ComplexHeatmap
