@@ -41,7 +41,7 @@ options(shiny.maxRequestSize = 30000*1024^2) # increase limit to 15gb?
 
 ui <- fluidPage(
   tags$script(src = "https://kit.fontawesome.com/070e476711.js"),
-  img(src = "scFOCAL.png", width = 700, height = 170),
+  img(src = "scFOCAL.png", width = "30%"),
   hr(),
   # br(),
   tags$head(tags$style(HTML(
