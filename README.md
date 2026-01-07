@@ -206,12 +206,8 @@ BiocManager::install()
 
 ##### Using devtools, the scFOCAL R package can be installed from the source file. With all dependencies satisfied, installation should take less than 5 minutes. 
 
-<p align="left">
-  <a href="https://drive.google.com/u/0/uc?id=1geEhIXKRkSBII37V4TMo5bl2AzcUJ3zN&export=download"><strong>Download the scFOCAL source file here! »</strong></a>
-</p>
-
    ```{r}
-   devtools::install_local("pathToYourSourceFile/ISOSCELES_0.0.0.9000.tar.gz")
+   devtools::install_github("AyadLab/scFOCAL")
    ```
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
