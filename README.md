@@ -103,6 +103,16 @@
 
 scFOCAL (formerly ISOSCELES) operates through the integration of drug-response transcriptional consensus signatures (TCSs) derived from the LINCS L1000 dataset with multi-subject single-cell RNA sequencing data, and facilitates analysis of drug and cell connectivity as a function of expression discordance from multiple perspectives.
 
+<p align="left">
+  <a href="https://www.nature.com/articles/s41467-025-67783-5"><strong>You can find the scFOCAL paper at Nature Communications here! »</strong></a>
+</p>
+
+Please cite the following when using scFOCAL: 
+
+```
+Suter, R.K., Jermakowicz, A.M., Veeramachaneni, R. et al. Drug and single-cell gene expression integration identifies sensitive and resistant glioblastoma cell populations. Nat Commun 17, 99 (2026). https://doi.org/10.1038/s41467-025-67783-5
+```
+
 <div align="center">
   <a href="https://github.com/AyadLab/scFOCAL">
     <img src="images/scFOCAL_graphicalAbstract.png" alt="abstract" width="600" height="646">
@@ -368,7 +378,7 @@ If you have a suggestion to improve the scFOCAL R package and GUI, please fork t
 <!-- LICENSE -->
 ## License
 
-Not currently distributed under any license. Public for manuscript review. 
+See license above. 
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
