@@ -1,35 +1,46 @@
-library(shiny)
-library(Seurat)
-library(ggplot2)
-library(tibble)
-library(cowplot)
-library(viridis)
-library(dplyr)
-library(ggsci)
-library(ggrepel)
-library(tidyverse)
-library(plotly)
-library(htmlwidgets)
-library(reshape2)
-library(Hmisc)
-library(corrplot)
-library(pheatmap)
-library(grid)
-library(MAST)
-library(shinydashboard)
-library(shinythemes)
-library(scales)
-library(ggforce)
-library(EnhancedVolcano)
-library(DT)
-library(lme4)
-library(edgeR)
-library(ggpubr)
-library(stringr)
-library(viridis)
-library(ComplexHeatmap)
+# library(shiny)
+# library(Seurat)
+# library(ggplot2)
+# library(tibble)
+# library(cowplot)
+# library(viridis)
+# library(dplyr)
+# library(ggsci)
+# library(ggrepel)
+# library(tidyverse)
+# library(plotly)
+# library(htmlwidgets)
+# library(reshape2)
+# library(Hmisc)
+# library(corrplot)
+# library(pheatmap)
+# library(grid)
+# library(MAST)
+# library(shinydashboard)
+# library(shinythemes)
+# library(scales)
+# library(ggforce)
+# library(EnhancedVolcano)
+# library(DT)
+# library(lme4)
+# library(edgeR)
+# library(ggpubr)
+# library(stringr)
+# library(viridis)
+# library(ComplexHeatmap)
 
-server <- function(input, output) {
+
+#Format:
+# seurat: gene x cells
+# drug signature: drugs x genes
+# corrmat: drugs x cells
+# metadata: cells x drugs
+
+
+server <- function(input, output, session) {
+  output$debugRelease <- renderPrint({
+    input$L1000_Release
+  })
 
   # L1000 data as reactive
   L1000_genes <- reactive({
@@ -39,6 +50,80 @@ server <- function(input, output) {
   LINCS.ResponseSigs <- reactive({
     get0("LINCS.ResponseSigs", envir = asNamespace("scFOCAL"))
   })
+
+  drugSignatures <- reactive({
+
+    # if user uploaded custom signatures
+    if (!is.null(input$customL1000Upload)) {
+
+      df <- read.csv(input$customL1000Upload$datapath,
+                     row.names = 1,
+                     check.names = FALSE)
+
+      # Detect orientation using gene overlap
+      # df needs to be drugs x genes
+      seurat_genes <- rownames(rdsSeurat()) # gene x cells
+
+      overlap_rows <- sum(rownames(df) %in% seurat_genes)
+      overlap_cols <- sum(colnames(df) %in% seurat_genes)
+
+      # If genes are in rows -> transpose
+      if (overlap_rows > overlap_cols) {
+        df <- t(df)
+        message("Transposed drug signature matrix (genes were in rows).")
+
+      }
+
+      if (overlap_cols == 0 && overlap_rows == 0) {
+        stop("No gene names overlap between drug file and Seurat object.")
+      }
+
+      return(as.data.frame(df))
+    }
+
+    # otherwise use built-in
+
+    df <- LINCS.ResponseSigs()
+    # remove "Genes" in column
+    if ("Genes" %in% colnames(df)) {
+      rownames(df) <- df$Genes
+      df$Genes <- NULL
+    }
+
+    return(df)
+
+
+  })
+
+  compounds <- reactive({
+
+    req(RDS_Final_CorrMat())
+    rownames(RDS_Final_CorrMat())
+
+  })
+
+  output$referenceCompound_ui <- renderUI({
+    req(input$Reference_L1000_or_Custom == "L1000 Derived")
+    req(compounds())
+
+    print("Rendering dropdown")
+    print(compounds())
+
+    selectizeInput(
+      "referenceCompound",
+      "Select reference compound",
+      choices = compounds(),
+      selected = compounds()[1]
+    )
+  })
+
+  perturbationSuccess <- reactiveVal(FALSE)
+
+  output$perturbationSuccess <- reactive({
+    perturbationSuccess()
+  })
+  outputOptions(output, "perturbationSuccess", suspendWhenHidden = FALSE)
+
 
   ################################################################################
   #
@@ -153,28 +238,29 @@ server <- function(input, output) {
   # Handle upload of pre-calculated correlation matrix
   corrMatUpload <- reactive({
     req(input$corrMatUpload)
-    read.csv(input$corrMatUpload$datapath, row.names = 1, header = T)
+    df <- read.csv(input$corrMatUpload$datapath, row.names = 1, header = T)
+    return(as.data.frame(t(df)))
   })
 
-  cm <- reactive({
-    if (class(corrMatUpload()) == "data.frame"){
-      return(NULL)
-    }
+  observeEvent(input$corrMatUpload, {
+    print("=== UPLOADED CORR MATRIX DETECTED ===")
+    RDS_Final_CorrMat(corrMatUpload())
   })
+
 
   output$corrMatUploaded <- reactive({
-    return(is.null(cm()))
+    !is.null(input$corrMatUpload)
   })
   outputOptions(output, 'corrMatUploaded', suspendWhenHidden = FALSE)
 
   output$corrMatNotUploaded <- reactive({
-    return(is.null(input$corrMatUpload$datapath))
+    is.null(input$corrMatUpload)
   })
   outputOptions(output, 'corrMatNotUploaded', suspendWhenHidden = FALSE)
 
   output$L1000_release_InSilico <- renderUI({ # select from dropdown which L1000 release to use for in silico perturbation:
     selectInput('L1000_Release', #input$groupByRDS
-                choices = c("2015", "2017", "2021"),
+                choices = c( "2017", "2021","Custom Upload"),
                 label = "Select L1000 Release",
                 selected = "2017",
                 multiple = F)
@@ -954,7 +1040,16 @@ server <- function(input, output) {
   # Calculate correlation matrix between L1000 compounds and single-cells in RDS upload.
   RDS_Final_CorrMat <- reactiveVal()
 
+
   observeEvent(eventExpr = input$CalculateRDS_L1000_Spearman_Mat, { # Here, we should add dropdown menu to select data slot to pull scale.data from...
+    if (!is.null(input$corrMatUpload)) {
+
+      # check if we are using uploaded correlation matrix first
+      print("=== USING UPLOADED CORRELATION MATRIX ===")
+      return()
+    }
+
+    # else continue correlation calculation with selected or uploaded drug signatures
     RDSseurat <- rdsSeurat()
     if (unlist(SeuratObject::Version(RDSseurat))[1] < 5) {
       if (dim(RDSseurat@assays$RNA@scale.data)[1] == 0){
@@ -984,7 +1079,7 @@ server <- function(input, output) {
       # }
     }
 
-    a <- LINCS.ResponseSigs()
+    a <- drugSignatures()
     a$compound <- rownames(a)
     progress5 <- shiny::Progress$new()
     progress5$set(message = "Transposing scale.data slot")
@@ -1032,16 +1127,30 @@ server <- function(input, output) {
     on.exit(progress6$close())
     progress6$set(message = "Calculating Drug-Cell Connectivity", value = 0)
 
+
+
     # loop through compounds
     counter <- 1
     Final_Matrix <- data.frame()
-    for (i in 1:length(rownames(LINCS.ResponseSigs()))){
-      cmpdToOverlay <- rownames(LINCS.ResponseSigs())[i]
-      progress6$inc(1/length(rownames(LINCS.ResponseSigs())), detail = paste("Calculating Correlations Against ", cmpdToOverlay))
+    for (i in seq_len(nrow(a))) {
+
+
+
+      cmpdToOverlay <- rownames(a)[i]
+
+      progress6$inc(
+        1 / nrow(a),
+        detail = paste("Calculating Correlations Against", cmpdToOverlay)
+      )
       cmpd <- subset(a, a$compound == cmpdToOverlay)
       cmpd$Genes <- NULL
+
+      # colnames(total.transpose) <- toupper(gsub("-", ".", colnames(total.transpose)))
+      # colnames(cmpd) <- toupper(gsub("-", ".", colnames(cmpd)))
+
       cmpdGenes <- colnames(cmpd)
-      cmpd_overlap <- colnames(total.transpose)[which(colnames(total.transpose) %in% cmpdGenes)]
+      #cmpd_overlap <- colnames(total.transpose)[which(colnames(total.transpose) %in% cmpdGenes)]
+      cmpd_overlap <- intersect(colnames(total.transpose), cmpdGenes)
       total.transpose.cmpd <- total.transpose[,cmpd_overlap] # FileA
       cmpd_ordered <- as.numeric(as.vector(t(cmpd)))
       names(cmpd_ordered) <- colnames(cmpd)
@@ -1049,11 +1158,12 @@ server <- function(input, output) {
       # head(colnames(total.transpose.cmpd) == names(cmpd_ordered2))
       SC <- cor(cmpd_ordered2, t(total.transpose.cmpd), method = "spearman")
       Final_Matrix <- rbind(Final_Matrix, SC)
-      rownames(Final_Matrix) <- rownames(LINCS.ResponseSigs())[1:counter]
+      rownames(Final_Matrix) <- rownames(a)[1:counter]
       counter <- counter + 1
     }
     Final_Matrix <- na.omit(Final_Matrix)
     RDS_Final_CorrMat(Final_Matrix)
+
   })
 
   ## Custom TCS Scoring
@@ -1090,7 +1200,16 @@ server <- function(input, output) {
       # }
     }
 
-    a <- LINCS.ResponseSigs()
+    a <- drugSignatures()
+
+    #DEBUG ORIENTATION
+    print("=== CHECKING drugSignatures() ===")
+    print(dim(a))
+    print("Row names (should be compounds):")
+    print(head(rownames(a)))
+    print("Col names (should be genes):")
+    print(head(colnames(a)))
+
     a$compound <- rownames(a)
     progress5 <- shiny::Progress$new()
     progress5$set(message = "Transposing scale.data slot")
@@ -1603,15 +1722,40 @@ server <- function(input, output) {
     RDSseurat <- SetIdent(RDSseurat, value = input$groupByRDS)
     tumorCells <- WhichCells(RDSseurat, idents = input$cancerCellIdentsRDS)
 
-    compoundSpearmans <- RDSseurat@meta.data[input$referenceCompound] # How to do this for the RDS upload... where is the spearman matrix and do we add it as metadata to the seurat object?
+    # compoundSpearmans <- RDSseurat@meta.data[input$referenceCompound] # How to do this for the RDS upload... where is the spearman matrix and do we add it as metadata to the seurat object?
+    #
+    # living <- subset(compoundSpearmans, subset = compoundSpearmans[input$referenceCompound] > input$correlationCutoff_RDS)
+    # dead <- subset(compoundSpearmans, subset = compoundSpearmans[input$referenceCompound] < input$correlationCutoff_RDS)
+    # livingCells <- rownames(living)
+    # deadCells <- rownames(dead)
+    #
 
-    living <- subset(compoundSpearmans, subset = compoundSpearmans[input$referenceCompound] > input$correlationCutoff_RDS)
-    dead <- subset(compoundSpearmans, subset = compoundSpearmans[input$referenceCompound] < input$correlationCutoff_RDS)
-    livingCells <- rownames(living)
-    deadCells <- rownames(dead)
+    compoundSpearmans <- RDSseurat@meta.data[input$referenceCompound]
+    vals <- compoundSpearmans[[1]]
+    cut <- input$correlationCutoff_RDS
+
+    deadCells <- rownames(compoundSpearmans)[vals <= cut[1]]   # Sensitive
+    livingCells <- rownames(compoundSpearmans)[vals >= cut[2]] # Resistant
+
+    print(input$correlationCutoff_RDS)
+
+    vals <- RDSseurat@meta.data[[input$referenceCompound]]
+
+    print("Slider value:")
+    print(input$correlationCutoff_RDS)
+
+    print("Correlation summary:")
+    print(summary(vals))
 
     resistantCells(livingCells)
     sensitiveCells(deadCells)
+
+    print(paste("Sensitive:", length(deadCells)))
+    print(paste("Resistant:", length(livingCells)))
+
+    groupsValid <- reactive({
+      length(deadCells) >= 10 && length(livingCells) >= 10
+    })
 
     p1 <- DimPlot(RDSseurat, reduction = input$reductionUseRDS,
                   cells.highlight = intersect(deadCells, tumorCells), sizes.highlight = 0.001, cols.highlight = c("blue")) +
@@ -1651,6 +1795,8 @@ server <- function(input, output) {
     dead <- subset(compoundSpearmans, subset = compoundSpearmans[input$Custom_TCS_nameInput] < input$correlationCutoff_customTCS)
     livingCells <- rownames(living)
     deadCells <- rownames(dead)
+
+
     resistantCells_customTCS(livingCells)
     sensitiveCells_customTCS(deadCells)
 
@@ -1928,6 +2074,7 @@ server <- function(input, output) {
   zmat_custTCS <- reactiveVal()
   seurRDS_customTCSsensitivity <- reactiveVal()
   seurRDS_customTCS_sensitivityAssigner <- reactiveVal()
+
   observeEvent(eventExpr = input$perturbationButton_customTCS, {
     if (input$perturbationButton_customTCS >= 1){
       RDSseurat <- seurat_custom_corradded()
@@ -1985,9 +2132,14 @@ server <- function(input, output) {
   zmat <- reactiveVal()
   seurRDSsensitivity <- reactiveVal()
   seurRDS_sensitivityAssigner <- reactiveVal()
+
   observeEvent(eventExpr = input$perturbationButton, {
+    perturbationSuccess(FALSE)
     if (input$perturbationButton >= 1){
+
       RDSseurat <- seurat_corradded()
+
+
       RDSseurat <- SetIdent(RDSseurat, value = input$groupByRDS)
       if (input$uploadCorrelationMatrix == TRUE){
         testSpearman <- as.data.frame(t(corrMatUpload()))
@@ -2008,6 +2160,20 @@ server <- function(input, output) {
       rownames(sensitivityAssigner) <- sensitivityAssigner$cells
       sensitivityAssigner$cells <- NULL
 
+      print(table(sensitivityAssigner$sensitivity))
+
+      if (length(unique(sensitivityAssigner$sensitivity)) < 2) {
+        showNotification(
+          "You must select a slider range that produces BOTH sensitive and resistant cells.",
+          type = "error",
+          duration = 5
+        )
+        perturbationSuccess(FALSE)
+        return(NULL)
+      }
+
+
+
       RDSseurat <- AddMetaData(RDSseurat, metadata = sensitivityAssigner)
       seurRDSsensitivity(RDSseurat)
       sensitivityAssigner <- subset(sensitivityAssigner, rownames(sensitivityAssigner) %in% tumorCells)
@@ -2022,8 +2188,12 @@ server <- function(input, output) {
       # sensitivity <- subset(sensitivity, rownames(sensitivity) %in% tumorCells)
       sensitivity <- sensitivity[which(rownames(sensitivity) %in% rownames(testSpearman)),]
       # subject_group <- interaction(sensitivity$sensitivity, subjectID$subjectID)
+
       sensitivity <- factor(sensitivity)
       subjectID <- factor(subjectID)
+
+
+
       design <- model.matrix(~ subjectID + sensitivity)
       z_matrix <- t(z_matrix)
       zmat(z_matrix)
@@ -2033,6 +2203,7 @@ server <- function(input, output) {
       limmaRes(results)
       print(head(results))
       print(head(colnames(z_matrix)))
+      perturbationSuccess(TRUE)
     }
   })
 
@@ -2065,7 +2236,7 @@ server <- function(input, output) {
                               y = "adj.P.Val", FCcutoff = 0.01, title = NULL, subtitle = NULL,
                               xlim = c(min(res[["logFC"]], na.rm = TRUE) - 0.1, max(res[["logFC"]], na.rm = TRUE) + 0.1)
                               # ylim = c(0, max(-log10(res[["adj.P.Val"]]), na.rm = TRUE) + 5)
-                              )
+      )
       volc_facet <- volc + ggforce::facet_zoom(xlim = c(min(res[["logFC"]], na.rm = TRUE) - 0.05,0))
       volc_facet <- volc_facet + theme(panel.spacing.y = unit(0.1, "cm"))
       volc_facet
