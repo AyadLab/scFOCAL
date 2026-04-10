@@ -392,7 +392,7 @@ ui <- fluidPage(
                                                                                            )
                                                                                          ),
                                                                                          wellPanel(
-                                                                                           conditionalPanel(condition = "output.corrMatrixCalculated",
+                                                                                           conditionalPanel(condition = "output.corrMatrixCalculated && !input.uploadCorrelationMatrix",
                                                                                                             hr(), # this part needs fixing... should align with left side
                                                                                                             h4("Discordance calculations complete. Download to avoid recalculation"),
                                                                                                             downloadButton(outputId = "RDScorrMatDownload", label = "Download single-cell vs small molecule correlations")
@@ -651,7 +651,7 @@ ui <- fluidPage(
                                                          )
                                                        ),
                                                        wellPanel(
-                                                         conditionalPanel(condition = "output.corrMatrixCalculated",
+                                                         conditionalPanel(condition = "output.corrMatrixCalculated && !input.uploadCorrelationMatrix",
                                                                           hr(), # this part needs fixing... should align with left side
                                                                           h4("Discordance calculations complete. Download to avoid recalculation"),
                                                                           downloadButton(outputId = "RDScorrMatDownload", label = "Download single-cell vs small molecule correlations")
