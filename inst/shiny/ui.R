@@ -29,15 +29,15 @@ library(DT)
 #
 ################################################################################
 
-#LINCS Response Signature Data
-LINCS.ResponseSigs <- read.delim(
-  file = "C:/Users/sabil/OneDrive/Desktop/Code/scFOCAL-main/inst/extdata/matPH3_2_1_0.2_0.3_L1000_Batch2017_Regina_removed.txt", header = T)
-row.names(LINCS.ResponseSigs) <- LINCS.ResponseSigs$Genes
-LINCS.ResponseSigs <- na.omit(LINCS.ResponseSigs)
-newNames <- gsub("-", ".", rownames(LINCS.ResponseSigs))
-rownames(LINCS.ResponseSigs) <- newNames
-L1000_genes <- colnames(LINCS.ResponseSigs)
-L1000_compounds <- rownames(LINCS.ResponseSigs)
+ # # LINCS Response Signature Data
+ # LINCS.ResponseSigs <- read.delim(
+ #   file = "matPH3_2_1_0.2_0.3_L1000_Batch2017_Regina_removed.txt", header = T)
+ # row.names(LINCS.ResponseSigs) <- LINCS.ResponseSigs$Genes
+ # LINCS.ResponseSigs <- na.omit(LINCS.ResponseSigs)
+ # newNames <- gsub("-", ".", rownames(LINCS.ResponseSigs))
+ # rownames(LINCS.ResponseSigs) <- newNames
+ # L1000_genes <- colnames(LINCS.ResponseSigs)
+ # L1000_compounds <- rownames(LINCS.ResponseSigs)
 
 ui <- fluidPage(
   tags$script(src = "https://kit.fontawesome.com/070e476711.js"),

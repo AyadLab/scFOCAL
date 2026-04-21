@@ -229,7 +229,7 @@ server <- function(input, output, session) {
       tags$head(tags$style(".modal-dialog{ width:85% !important;}")),
       DT::dataTableOutput("customTCS_table"),
       br(),
-      "plotSomethingHere",
+      #"plotSomethingHere",
       easyClose = TRUE,
       footer = modalButton("Close")
     ))
