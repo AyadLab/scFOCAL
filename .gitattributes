@@ -1,0 +1,3 @@
+ * text=auto
+  *.r text eol=lf
+  *.R text eol=lf
