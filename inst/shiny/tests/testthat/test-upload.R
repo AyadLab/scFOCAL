@@ -15,10 +15,13 @@ test_that("app loads without errors", {
 })
 
 test_that("uploading a valid Seurat RDS shows success message", {
-  skip_if_not(
-    file.exists(test_path("fixtures/downsampled_seuratObj.RDS")),
-    "Seurat fixture not available (requires Git LFS)"
+  # Resolve to absolute path NOW, before AppDriver can change the working dir
+  fixture <- normalizePath(
+    test_path("fixtures/downsampled_seuratObj.RDS"),
+    mustWork = FALSE
   )
+  skip_if_not(file.exists(fixture), "Seurat fixture not available (requires Git LFS)")
+
   app <- AppDriver$new(
     app_dir      = system.file("shiny", package = "scFOCAL"),
     name         = "seurat-upload",
@@ -26,9 +29,7 @@ test_that("uploading a valid Seurat RDS shows success message", {
     timeout      = 120000
   )
 
-  app$upload_file(
-    seurobjRDS = test_path("fixtures/downsampled_seuratObj.RDS")
-  )
+  app$upload_file(seurobjRDS = fixture)
 
   # Wait for seuratLoaded to be TRUE. Ignore NULL (pre-upload) and any
   # transient FALSE that may arrive while the 134 MB file is being read.
