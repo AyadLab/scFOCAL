@@ -22,6 +22,16 @@ jobs:
           extra-packages: any::shinytest2
           needs: shinytest2
 
+      - name: Install scFOCAL package
+        run: R CMD INSTALL --no-multiarch .
+
+      - name: Verify scFOCAL installed
+        shell: Rscript {0}
+        run: |
+          path <- system.file("shiny", package = "scFOCAL")
+          if (!nzchar(path)) stop("scFOCAL not installed: system.file() returned ''")
+          cat("scFOCAL shiny dir:", path, "\n")
+
       - name: Run shinytest2 tests
         shell: Rscript {0}
         run: |
