@@ -22,8 +22,10 @@ library(scales)
 library(ggforce)
 library(EnhancedVolcano)
 library(DT)
+library(scFOCAL)
 
  options(shiny.maxRequestSize = 30000*1024^2) # increase limit to 15gb?
+
 
 ################################################################################
 #
@@ -106,6 +108,16 @@ ui <- fluidPage(
                  hr(),
                  p(em("Depending on file size, after the file upload above is complete, it will still take some additional time for the data to be loaded into the processing environment. Please be patient.")),
                  br(),
+
+                 conditionalPanel(condition = 'output.seuratLoaded',
+                                  selectInput(
+                                    inputId = "assayChoice",
+                                    label = "Select Assay",
+                                    choices = NULL
+                                  )
+
+                                  )
+
                  ),
 #### 2. PRE- PROCESSING ############################################################################################################################################################################################
                  tabPanel(tags$div(

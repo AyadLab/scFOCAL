@@ -1,0 +1,28 @@
+on:
+  pull_request:
+    branches: [main, master, drug_signature_update]
+
+name: shinytest2
+
+jobs:
+  shinytest2:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: any::shinytest2
+          needs: shinytest2
+
+      - name: Run shinytest2 tests
+        shell: Rscript {0}
+        run: |
+          shinytest2::test_app("inst/shiny")

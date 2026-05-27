@@ -42,3 +42,5 @@ Imports:
     viridis,
     ggpubr,
     ComplexHeatmap
+Suggests: 
+    shinytest2

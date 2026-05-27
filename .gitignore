@@ -2,3 +2,4 @@
 .Rhistory
 .RData
 .Ruserdata
+inst/shiny/tests/testthat/fixtures/
