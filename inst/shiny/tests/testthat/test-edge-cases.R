@@ -55,9 +55,10 @@ test_that("app does not crash when accessed before uploading Seurat file", {
 # ── Bug 1: corrMat double transpose — compound dropdown must show drug names ──
 
 test_that("corrMat upload shows drug names in compound dropdown, not cell barcodes", {
-  # If the double-transpose bug is present, rownames(RDS_Final_CorrMat())
-  # returns cell barcodes instead of drug names, populating the compound
-  # dropdown with barcodes.
+  skip_if_not(
+    file.exists(test_path("fixtures/downsampled_seuratObj.RDS")),
+    "Seurat fixture not available (requires Git LFS)"
+  )
   drug_names    <- c("DrugA", "DrugB", "DrugC")
   corr_mat_path <- make_corr_mat_csv(drug_names)
 
@@ -95,6 +96,10 @@ test_that("corrMat upload shows drug names in compound dropdown, not cell barcod
 # ── Bug 2: duplicate uiOutput — compound dropdown must not be empty ───────────
 
 test_that("reference compound dropdown is populated after corrMat upload", {
+  skip_if_not(
+    file.exists(test_path("fixtures/downsampled_seuratObj.RDS")),
+    "Seurat fixture not available (requires Git LFS)"
+  )
   # uiOutput('referenceCompound_ui') appears in two tabs in ui.R.
   # When the same output ID is bound twice, the second binding can
   # overwrite the first, leaving one tab's dropdown empty.
@@ -131,6 +136,10 @@ test_that("reference compound dropdown is populated after corrMat upload", {
 # ── Bug 5: lowercase gene names in custom drug signature should not crash ─────
 
 test_that("custom drug signature with lowercase gene names does not crash app", {
+  skip_if_not(
+    file.exists(test_path("fixtures/downsampled_seuratObj.RDS")),
+    "Seurat fixture not available (requires Git LFS)"
+  )
   # If gene names in the uploaded CSV are lowercase (e.g. tp53) but the
   # Seurat object uses uppercase (TP53), overlap detection returns 0 and
   # the server calls stop(), crashing the reactive chain silently.
