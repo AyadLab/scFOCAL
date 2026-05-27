@@ -15,6 +15,10 @@ test_that("app loads without errors", {
 })
 
 test_that("uploading a valid Seurat RDS shows success message", {
+  skip_if_not(
+    file.exists(test_path("fixtures/downsampled_seuratObj.RDS")),
+    "Seurat fixture not available (requires Git LFS)"
+  )
   app <- AppDriver$new(
     app_dir      = system.file("shiny", package = "scFOCAL"),
     name         = "seurat-upload",
