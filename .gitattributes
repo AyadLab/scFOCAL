@@ -1,0 +1,4 @@
+* text=auto
+*.r text eol=lf
+*.R text eol=lf
+*.RDS filter=lfs diff=lfs merge=lfs -text

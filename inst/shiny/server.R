@@ -23,13 +23,53 @@ library(ggforce)
 library(EnhancedVolcano)
 library(DT)
 library(lme4)
+library(limma)
 library(edgeR)
 library(ggpubr)
 library(stringr)
 library(viridis)
 library(ComplexHeatmap)
+library(scFOCAL)
 
-server <- function(input, output) {
+
+#Format:
+# seurat: gene x cells
+# drug signature: drugs x genes
+# corrmat: drugs x cells
+# metadata: cells x drugs
+
+
+server <- function(input, output, session) {
+
+  assay_to_use <- reactive({
+    if (!is.null(input$assayChoice) && input$assayChoice != "") {
+      input$assayChoice
+    } else {
+      if (is.null(isOrthogonAL())) {
+        "RNA"
+      } else {
+        "RNA_ortho"
+      }
+    }
+  })
+
+
+  layer_to_use <- reactive({
+    req(assay_to_use(), rdsSeurat())
+
+    assay <- assay_to_use()
+    layers <- names(rdsSeurat()@assays[[assay]])
+
+    if ("scale.data" %in% layers) {
+      "scale.data"
+    } else {
+      "data"
+    }
+  })
+
+  output$debugRelease <- renderPrint({
+    input$L1000_Release
+  })
 
   # L1000 data as reactive
   L1000_genes <- reactive({
@@ -39,6 +79,82 @@ server <- function(input, output) {
   LINCS.ResponseSigs <- reactive({
     get0("LINCS.ResponseSigs", envir = asNamespace("scFOCAL"))
   })
+
+  drugSignatures <- reactive({
+
+    # if user uploaded custom signatures
+    if (!is.null(input$customL1000Upload)) {
+
+      df <- read.csv(input$customL1000Upload$datapath,
+                     row.names = 1,
+                     check.names = FALSE)
+
+      # Detect orientation using gene overlap
+      # df needs to be drugs x genes
+      seurat_genes <- rownames(rdsSeurat()) # gene x cells
+
+      overlap_rows <- sum(toupper(rownames(df)) %in% toupper(seurat_genes))
+      overlap_cols <- sum(toupper(colnames(df)) %in% toupper(seurat_genes))
+
+      # If genes are in rows -> transpose
+      if (overlap_rows > overlap_cols) {
+        df <- t(df)
+        message("Transposed drug signature matrix (genes were in rows).")
+
+      }
+
+      if (overlap_cols == 0 && overlap_rows == 0) {
+        stop("No gene names overlap between drug file and Seurat object.")
+      }
+
+      return(as.data.frame(df))
+    }
+
+    # otherwise use built-in
+
+    df <- LINCS.ResponseSigs()
+    # remove "Genes" in column
+    if ("Genes" %in% colnames(df)) {
+      rownames(df) <- df$Genes
+      df$Genes <- NULL
+    }
+
+    return(df)
+
+
+  })
+
+  compounds <- reactive({
+
+    req(RDS_Final_CorrMat())
+    rownames(RDS_Final_CorrMat())
+
+
+  })
+
+  output$referenceCompound_ui <- renderUI({
+    req(input$Reference_L1000_or_Custom == "L1000 Derived")
+    req(compounds())
+
+    print("Rendering dropdown")
+    print(compounds())
+
+    selectizeInput(
+      "referenceCompound",
+      "Select reference compound",
+      choices = compounds(),
+      selected = compounds()[1]
+    )
+  })
+  outputOptions(output, 'referenceCompound_ui', suspendWhenHidden = FALSE)
+
+  perturbationSuccess <- reactiveVal(FALSE)
+
+  output$perturbationSuccess <- reactive({
+    perturbationSuccess()
+  })
+  outputOptions(output, "perturbationSuccess", suspendWhenHidden = FALSE)
+
 
   ################################################################################
   #
@@ -105,6 +221,18 @@ server <- function(input, output) {
 
   outputOptions(output, 'seuratNotLoaded', suspendWhenHidden = FALSE)
 
+  observe({
+    req(rdsSeurat())
+    assays <- names(rdsSeurat()@assays)
+
+    updateSelectInput(
+      session,
+      "assayChoice",
+      choices = assays,
+      selected = assays[1]
+    )
+  })
+
   # Custom TCS Upload
   ##############################################################################
   # handle upload of Seurat object
@@ -143,7 +271,7 @@ server <- function(input, output) {
       tags$head(tags$style(".modal-dialog{ width:85% !important;}")),
       DT::dataTableOutput("customTCS_table"),
       br(),
-      "plotSomethingHere",
+      #"plotSomethingHere",
       easyClose = TRUE,
       footer = modalButton("Close")
     ))
@@ -153,28 +281,29 @@ server <- function(input, output) {
   # Handle upload of pre-calculated correlation matrix
   corrMatUpload <- reactive({
     req(input$corrMatUpload)
-    read.csv(input$corrMatUpload$datapath, row.names = 1, header = T)
+    df <- read.csv(input$corrMatUpload$datapath, row.names = 1, header = T)
+    return(as.data.frame(df))
   })
 
-  cm <- reactive({
-    if (class(corrMatUpload()) == "data.frame"){
-      return(NULL)
-    }
+  observeEvent(input$corrMatUpload, {
+    print("=== UPLOADED CORR MATRIX DETECTED ===")
+    RDS_Final_CorrMat(corrMatUpload())
   })
+
 
   output$corrMatUploaded <- reactive({
-    return(is.null(cm()))
+    !is.null(input$corrMatUpload)
   })
   outputOptions(output, 'corrMatUploaded', suspendWhenHidden = FALSE)
 
   output$corrMatNotUploaded <- reactive({
-    return(is.null(input$corrMatUpload$datapath))
+    is.null(input$corrMatUpload)
   })
   outputOptions(output, 'corrMatNotUploaded', suspendWhenHidden = FALSE)
 
   output$L1000_release_InSilico <- renderUI({ # select from dropdown which L1000 release to use for in silico perturbation:
     selectInput('L1000_Release', #input$groupByRDS
-                choices = c("2015", "2017", "2021"),
+                choices = c( "2017","Custom Upload"),
                 label = "Select L1000 Release",
                 selected = "2017",
                 multiple = F)
@@ -376,6 +505,7 @@ server <- function(input, output) {
     RDSseurat <- rdsSeurat()
     RDSseurat <- SetIdent(RDSseurat, value = input$groupByRDS)
 
+    #if not orthogonal print "non-orthogonal" else set default assay as RNA_ortho
     if (is.null(isOrthogonAL()) == TRUE){ # is this backwards? ############################################################################################# <
       print("Is null = F, non-orthogonal")
     } else {
@@ -954,40 +1084,80 @@ server <- function(input, output) {
   # Calculate correlation matrix between L1000 compounds and single-cells in RDS upload.
   RDS_Final_CorrMat <- reactiveVal()
 
+
   observeEvent(eventExpr = input$CalculateRDS_L1000_Spearman_Mat, { # Here, we should add dropdown menu to select data slot to pull scale.data from...
-    RDSseurat <- rdsSeurat()
-    if (unlist(SeuratObject::Version(RDSseurat))[1] < 5) {
-      if (dim(RDSseurat@assays$RNA@scale.data)[1] == 0){
-        print("scale.data slot is empty - scaling data")
-        RDSseurat <- ScaleData(RDSseurat, do.center = T)
-      }
-    } else {
-      print("V5 Seurat Object Detected: server.R #853")
-      if (is.null(isOrthogonAL()) == TRUE){ # is this backwards? ############################################################################################# <
-        print("Is null = F, non-orthogonal")
-        # if (dim(RDSseurat@assays$RNA@layers$scale.data)[1] == 0){
-        #   print("scale.data slot is empty - scaling data")
-        #   RDSseurat <- ScaleData(RDSseurat, do.center = T)
-        # }
-      } else {
-        print("Is.null = T, OrthogonalObject")
-        DefaultAssay(RDSseurat) <- c("RNA_ortho")
-        # if (dim(RDSseurat@assays$RNA_ortho@layers$scale.data)[1] == 0){
-        #   print("scale.data slot is empty - scaling data")
-        #   RDSseurat <- ScaleData(RDSseurat, do.center = T)
-        # }
-      }
-      # DefaultAssay(RDSseurat) <- "RNA_ortho"
-      # if (dim(RDSseurat@assays$RNA_ortho@layers$scale.data)[1] == 0){
-      #   print("scale.data slot is empty - scaling data")
-      #   RDSseurat <- ScaleData(RDSseurat, do.center = T)
-      # }
+    if (!is.null(input$corrMatUpload)) {
+
+      # check if we are using uploaded correlation matrix first
+      print("=== USING UPLOADED CORRELATION MATRIX ===")
+      return()
     }
 
-    a <- LINCS.ResponseSigs()
-    a$compound <- rownames(a)
+    # else continue correlation calculation with selected or uploaded drug signatures
+    RDSseurat <- rdsSeurat()
+    assay <- assay_to_use()
+    layer <- layer_to_use()
+
+    print(paste("Using assay:", assay))
+    print(paste("Using layer:", layer))
+
     progress5 <- shiny::Progress$new()
     progress5$set(message = "Transposing scale.data slot")
+    # Handle scaling if needed
+    if (unlist(SeuratObject::Version(RDSseurat))[1] < 5) {
+      #if (dim(RDSseurat@assays$RNA@scale.data)[1] == 0){
+      if (dim(RDSseurat@assays[[assay]]@scale.data)[1] == 0){
+        print("scale.data slot is empty - scaling data")
+        DefaultAssay(RDSseurat) <- assay
+        RDSseurat <- ScaleData(RDSseurat, do.center = T)
+      }
+
+      total.transpose <- t(RDSseurat@assays[[assay]]@scale.data)
+
+    } else {
+      print("V5 Seurat Object Detected: server.R #853")
+
+      mat <- tryCatch({
+        GetAssayData(RDSseurat, assay = assay, layer = "scale.data")
+      }, error = function(e) NULL)
+
+      if (is.null(mat) || nrow(mat) == 0){
+        print("scale.data missing - scaling")
+        DefaultAssay(RDSseurat) <- assay
+        RDSseurat <- ScaleData(RDSseurat, do.center = TRUE)
+      }
+
+      total.transpose <- t(GetAssayData(
+        RDSseurat,
+        assay = assay,
+        layer = layer
+      ))
+    }
+
+    total.transpose <- as.matrix(total.transpose)
+
+
+    #   if (is.null(isOrthogonAL()) == TRUE){ # is this backwards? ############################################################################################# <
+    #     print("Is null = F, non-orthogonal")
+    #     # if (dim(RDSseurat@assays$RNA@layers$scale.data)[1] == 0){
+    #     #   print("scale.data slot is empty - scaling data")
+    #     #   RDSseurat <- ScaleData(RDSseurat, do.center = T)
+    #     # }
+    #   } else {
+    #     print("Is.null = T, OrthogonalObject")
+    #     DefaultAssay(RDSseurat) <- c("RNA_ortho")
+    #     # if (dim(RDSseurat@assays$RNA_ortho@layers$scale.data)[1] == 0){
+    #     #   print("scale.data slot is empty - scaling data")
+    #     #   RDSseurat <- ScaleData(RDSseurat, do.center = T)
+    #     # }
+    #   }
+    #   # DefaultAssay(RDSseurat) <- "RNA_ortho"
+    #   # if (dim(RDSseurat@assays$RNA_ortho@layers$scale.data)[1] == 0){
+    #   #   print("scale.data slot is empty - scaling data")
+    #   #   RDSseurat <- ScaleData(RDSseurat, do.center = T)
+    #   # }
+    # }
+
 
     # if (is.null(isOrthogonAL()) == FALSE){ # is this backwards?
     #   print("Is null = F, orthogonal")
@@ -996,35 +1166,48 @@ server <- function(input, output) {
     #   DefaultAssay(RDSseurat) <- c("RNA_ortho")
     # }
 
-    if (is.null(isOrthogonAL()) == TRUE){ # is this backwards? ############################################################################################# <
-      print("Is null = F, non-orthogonal")
-    } else {
-      print("Is.null = T, OrthogonalObject")
-      DefaultAssay(RDSseurat) <- c("RNA_ortho")
-    }
+    # if (is.null(isOrthogonAL()) == TRUE){ # is this backwards? ############################################################################################# <
+    #   print("Is null = F, non-orthogonal")
+    # } else {
+    #   print("Is.null = T, OrthogonalObject")
+    #   #DefaultAssay(RDSseurat) <- c("RNA_ortho")
+    # }
+
     ##########################################################################################################################################
-    if (unlist(SeuratObject::Version(RDSseurat))[1] < 5){
-      print("line 909: detected as less than v5")
-      # if (is.null(isOrthogonAL()) == FALSE){ # is this backwards?
-      #   print("Is null = F, non-orthogonal")
-      # } else {
-      #   print("Is.null = T, OrthogonalObject")
-      #   DefaultAssay(RDSseurat) <- c("RNA_ortho")
-      # }
-      total.transpose <- t(RDSseurat@assays$RNA@scale.data) # which assay to integrate with?
-    } else {
-      print("We're here 927")
-      if (is.null(isOrthogonAL()) == TRUE){ # is this backwards?
-        print("Is.null = T, non-OrthogonalObject")
-        # DefaultAssay(RDSseurat) <- c("RNA_ortho")
-        # total.transpose <- t(RDSseurat@assays$RNA_ortho@layers$scale.data) # which assay to integrate with?
-        total.transpose <- t(GetAssayData(RDSseurat, assay = "RNA", layer = "scale.data"))
-      } else {
-        print("Is null = F, orthogonal")
-        # total.transpose <- t(RDSseurat@assays$RNA@layers$scale.data) # which assay to integrate with?
-        total.transpose <- t(GetAssayData(RDSseurat, assay = "RNA_ortho", layer = "scale.data"))
-      }
-    }
+    # if (unlist(SeuratObject::Version(RDSseurat))[1] < 5){
+    #   print("line 909: detected as less than v5")
+    #
+    #   # if (is.null(isOrthogonAL()) == FALSE){ # is this backwards?
+    #   #   print("Is null = F, non-orthogonal")
+    #   # } else {
+    #   #   print("Is.null = T, OrthogonalObject")
+    #   #   DefaultAssay(RDSseurat) <- c("RNA_ortho")
+    #   # }
+    #
+    #   #total.transpose <- t(RDSseurat@assays$RNA@scale.data) # which assay to integrate with?
+    #   total.transpose <- t(RDSseurat@assays[[assay]]@scale.data)
+    # } else {
+    #
+    #   print("We're here 927")
+    #
+    #   # if (is.null(isOrthogonAL()) == TRUE){ # is this backwards?
+    #   #   print("Is.null = T, non-OrthogonalObject")
+    #   #   # DefaultAssay(RDSseurat) <- c("RNA_ortho")
+    #   #   # total.transpose <- t(RDSseurat@assays$RNA_ortho@layers$scale.data) # which assay to integrate with?
+    #   #   total.transpose <- t(GetAssayData(RDSseurat, assay = "RNA", layer = "scale.data"))
+    #   # } else {
+    #   #   print("Is null = F, orthogonal")
+    #   #   # total.transpose <- t(RDSseurat@assays$RNA@layers$scale.data) # which assay to integrate with?
+    #   #   total.transpose <- t(GetAssayData(RDSseurat, assay = "RNA_ortho", layer = "scale.data"))
+    #   # }
+    #
+    #   total.transpose <- t(GetAssayData(
+    #     RDSseurat,
+    #     assay = assay,
+    #     layer = layer
+    #     ))
+    #
+    # }
     ##################################################################################################################################################
     progress5$close()
 
@@ -1032,16 +1215,34 @@ server <- function(input, output) {
     on.exit(progress6$close())
     progress6$set(message = "Calculating Drug-Cell Connectivity", value = 0)
 
+    a <- drugSignatures()
+    a$compound <- rownames(a)
+
+    print(class(total.transpose))
+    print(mode(total.transpose))
+
     # loop through compounds
     counter <- 1
     Final_Matrix <- data.frame()
-    for (i in 1:length(rownames(LINCS.ResponseSigs()))){
-      cmpdToOverlay <- rownames(LINCS.ResponseSigs())[i]
-      progress6$inc(1/length(rownames(LINCS.ResponseSigs())), detail = paste("Calculating Correlations Against ", cmpdToOverlay))
+    for (i in seq_len(nrow(a))) {
+
+
+
+      cmpdToOverlay <- rownames(a)[i]
+
+      progress6$inc(
+        1 / nrow(a),
+        detail = paste("Calculating Correlations Against", cmpdToOverlay)
+      )
       cmpd <- subset(a, a$compound == cmpdToOverlay)
       cmpd$Genes <- NULL
+
+      # colnames(total.transpose) <- toupper(gsub("-", ".", colnames(total.transpose)))
+      # colnames(cmpd) <- toupper(gsub("-", ".", colnames(cmpd)))
+
       cmpdGenes <- colnames(cmpd)
-      cmpd_overlap <- colnames(total.transpose)[which(colnames(total.transpose) %in% cmpdGenes)]
+      #cmpd_overlap <- colnames(total.transpose)[which(colnames(total.transpose) %in% cmpdGenes)]
+      cmpd_overlap <- intersect(colnames(total.transpose), cmpdGenes)
       total.transpose.cmpd <- total.transpose[,cmpd_overlap] # FileA
       cmpd_ordered <- as.numeric(as.vector(t(cmpd)))
       names(cmpd_ordered) <- colnames(cmpd)
@@ -1049,11 +1250,12 @@ server <- function(input, output) {
       # head(colnames(total.transpose.cmpd) == names(cmpd_ordered2))
       SC <- cor(cmpd_ordered2, t(total.transpose.cmpd), method = "spearman")
       Final_Matrix <- rbind(Final_Matrix, SC)
-      rownames(Final_Matrix) <- rownames(LINCS.ResponseSigs())[1:counter]
+      rownames(Final_Matrix) <- rownames(a)[1:counter]
       counter <- counter + 1
     }
     Final_Matrix <- na.omit(Final_Matrix)
     RDS_Final_CorrMat(Final_Matrix)
+
   })
 
   ## Custom TCS Scoring
@@ -1090,7 +1292,16 @@ server <- function(input, output) {
       # }
     }
 
-    a <- LINCS.ResponseSigs()
+    a <- drugSignatures()
+
+    #DEBUG ORIENTATION
+    print("=== CHECKING drugSignatures() ===")
+    print(dim(a))
+    print("Row names (should be compounds):")
+    print(head(rownames(a)))
+    print("Col names (should be genes):")
+    print(head(colnames(a)))
+
     a$compound <- rownames(a)
     progress5 <- shiny::Progress$new()
     progress5$set(message = "Transposing scale.data slot")
@@ -1228,16 +1439,35 @@ server <- function(input, output) {
   # })
 
   seurat_corradded <- reactive({
+
     if (input$uploadCorrelationMatrix == TRUE){
       req(input$uploadCorrelationMatrix == TRUE)
+      print("Am here uploadedcorrmatrix")
       obj <- rdsSeurat()
+
       Final_Matrix <- as.data.frame(t(corrMatUpload()))
+
+      print("rownames of Final_Matrix:")
+      print(head(rownames(Final_Matrix)))
+      print("colnames of obj")
+      print(head(colnames(obj)))
+
       obj <- AddMetaData(obj, metadata = Final_Matrix)
+
       obj
     } else {
       req(input$CalculateRDS_L1000_Spearman_Mat)
+      print(input$CalculateRDS_L1000_Spearman_Mat)
+      print("Am here after spearman calc")
       obj <- rdsSeurat()
+
+
       Final_Matrix <- as.data.frame(t(RDS_Final_CorrMat()))
+      print("rownames of Final_Matrix:")
+      print(head(rownames(Final_Matrix)))
+      print("colnames of obj")
+      print(head(colnames(obj)))
+
       obj <- AddMetaData(obj, metadata = Final_Matrix)
       obj
     }
@@ -1280,7 +1510,7 @@ server <- function(input, output) {
     compoundSignature <- as.data.frame(t(compoundSignature)) # set-up
     compoundSignature$Genes <- rownames(compoundSignature) # set-up
     compoundSignature <- subset(compoundSignature, compoundSignature[input$referenceCompound] != 0) # remove zero values
-    for (i in 1:length(rownames(compoundSignature))){ # Assign positive or negative values so we can color by that.
+    for (i in seq_len(nrow(compoundSignature))){ # Assign positive or negative values so we can color by that.
       if (compoundSignature[i, input$referenceCompound] > 0){
         compoundSignature$PosNeg[i] <- "Pos"
       }
@@ -1603,15 +1833,40 @@ server <- function(input, output) {
     RDSseurat <- SetIdent(RDSseurat, value = input$groupByRDS)
     tumorCells <- WhichCells(RDSseurat, idents = input$cancerCellIdentsRDS)
 
-    compoundSpearmans <- RDSseurat@meta.data[input$referenceCompound] # How to do this for the RDS upload... where is the spearman matrix and do we add it as metadata to the seurat object?
+    # compoundSpearmans <- RDSseurat@meta.data[input$referenceCompound] # How to do this for the RDS upload... where is the spearman matrix and do we add it as metadata to the seurat object?
+    #
+    # living <- subset(compoundSpearmans, subset = compoundSpearmans[input$referenceCompound] > input$correlationCutoff_RDS)
+    # dead <- subset(compoundSpearmans, subset = compoundSpearmans[input$referenceCompound] < input$correlationCutoff_RDS)
+    # livingCells <- rownames(living)
+    # deadCells <- rownames(dead)
+    #
 
-    living <- subset(compoundSpearmans, subset = compoundSpearmans[input$referenceCompound] > input$correlationCutoff_RDS)
-    dead <- subset(compoundSpearmans, subset = compoundSpearmans[input$referenceCompound] < input$correlationCutoff_RDS)
-    livingCells <- rownames(living)
-    deadCells <- rownames(dead)
+    compoundSpearmans <- RDSseurat@meta.data[input$referenceCompound]
+    vals <- compoundSpearmans[[1]]
+    cut <- input$correlationCutoff_RDS
+
+    deadCells <- rownames(compoundSpearmans)[vals <= cut[1]]   # Sensitive
+    livingCells <- rownames(compoundSpearmans)[vals >= cut[2]] # Resistant
+
+    print(input$correlationCutoff_RDS)
+
+    vals <- RDSseurat@meta.data[[input$referenceCompound]]
+
+    print("Slider value:")
+    print(input$correlationCutoff_RDS)
+
+    print("Correlation summary:")
+    print(summary(vals))
 
     resistantCells(livingCells)
     sensitiveCells(deadCells)
+
+    print(paste("Sensitive:", length(deadCells)))
+    print(paste("Resistant:", length(livingCells)))
+
+    groupsValid <- reactive({
+      length(deadCells) >= 10 && length(livingCells) >= 10
+    })
 
     p1 <- DimPlot(RDSseurat, reduction = input$reductionUseRDS,
                   cells.highlight = intersect(deadCells, tumorCells), sizes.highlight = 0.001, cols.highlight = c("blue")) +
@@ -1651,6 +1906,8 @@ server <- function(input, output) {
     dead <- subset(compoundSpearmans, subset = compoundSpearmans[input$Custom_TCS_nameInput] < input$correlationCutoff_customTCS)
     livingCells <- rownames(living)
     deadCells <- rownames(dead)
+
+
     resistantCells_customTCS(livingCells)
     sensitiveCells_customTCS(deadCells)
 
@@ -1744,7 +2001,7 @@ server <- function(input, output) {
 
 
       # # Should just do this now because will want to include this in deltaMean part.
-      for (i in 1:length(rownames(resistantMeans))){ # Assign positive or negative values so we can color by that.
+      for (i in seq_len(nrow(resistantMeans))){ # Assign positive or negative values so we can color by that.
         if (resistantMeans$mean[i] > 0){
           resistantMeans$PosNeg[i] <- "Pos"
         }
@@ -1753,7 +2010,7 @@ server <- function(input, output) {
         }
       }
 
-      for (i in 1:length(rownames(sensitiveMeans))){
+      for (i in seq_len(nrow(sensitiveMeans))){
         if (sensitiveMeans$mean[i] > 0){
           sensitiveMeans$PosNeg[i] <- "Pos"
         }
@@ -1762,7 +2019,7 @@ server <- function(input, output) {
         }
       }
 
-      for (i in 1:length(rownames(deltaMeans))){
+      for (i in seq_len(nrow(deltaMeans))){
         if (deltaMeans$deltaMean[i] > 0){
           deltaMeans$PosNeg[i] <- "Pos"
         }
@@ -1928,6 +2185,7 @@ server <- function(input, output) {
   zmat_custTCS <- reactiveVal()
   seurRDS_customTCSsensitivity <- reactiveVal()
   seurRDS_customTCS_sensitivityAssigner <- reactiveVal()
+
   observeEvent(eventExpr = input$perturbationButton_customTCS, {
     if (input$perturbationButton_customTCS >= 1){
       RDSseurat <- seurat_custom_corradded()
@@ -1985,9 +2243,14 @@ server <- function(input, output) {
   zmat <- reactiveVal()
   seurRDSsensitivity <- reactiveVal()
   seurRDS_sensitivityAssigner <- reactiveVal()
+
   observeEvent(eventExpr = input$perturbationButton, {
+    perturbationSuccess(FALSE)
     if (input$perturbationButton >= 1){
+
       RDSseurat <- seurat_corradded()
+
+
       RDSseurat <- SetIdent(RDSseurat, value = input$groupByRDS)
       if (input$uploadCorrelationMatrix == TRUE){
         testSpearman <- as.data.frame(t(corrMatUpload()))
@@ -2008,6 +2271,20 @@ server <- function(input, output) {
       rownames(sensitivityAssigner) <- sensitivityAssigner$cells
       sensitivityAssigner$cells <- NULL
 
+      print(table(sensitivityAssigner$sensitivity))
+
+      if (length(unique(sensitivityAssigner$sensitivity)) < 2) {
+        showNotification(
+          "You must select a slider range that produces BOTH sensitive and resistant cells.",
+          type = "error",
+          duration = 5
+        )
+        perturbationSuccess(FALSE)
+        return(NULL)
+      }
+
+
+
       RDSseurat <- AddMetaData(RDSseurat, metadata = sensitivityAssigner)
       seurRDSsensitivity(RDSseurat)
       sensitivityAssigner <- subset(sensitivityAssigner, rownames(sensitivityAssigner) %in% tumorCells)
@@ -2022,8 +2299,12 @@ server <- function(input, output) {
       # sensitivity <- subset(sensitivity, rownames(sensitivity) %in% tumorCells)
       sensitivity <- sensitivity[which(rownames(sensitivity) %in% rownames(testSpearman)),]
       # subject_group <- interaction(sensitivity$sensitivity, subjectID$subjectID)
+
       sensitivity <- factor(sensitivity)
       subjectID <- factor(subjectID)
+
+
+
       design <- model.matrix(~ subjectID + sensitivity)
       z_matrix <- t(z_matrix)
       zmat(z_matrix)
@@ -2033,6 +2314,7 @@ server <- function(input, output) {
       limmaRes(results)
       print(head(results))
       print(head(colnames(z_matrix)))
+      perturbationSuccess(TRUE)
     }
   })
 
@@ -2065,7 +2347,7 @@ server <- function(input, output) {
                               y = "adj.P.Val", FCcutoff = 0.01, title = NULL, subtitle = NULL,
                               xlim = c(min(res[["logFC"]], na.rm = TRUE) - 0.1, max(res[["logFC"]], na.rm = TRUE) + 0.1)
                               # ylim = c(0, max(-log10(res[["adj.P.Val"]]), na.rm = TRUE) + 5)
-                              )
+      )
       volc_facet <- volc + ggforce::facet_zoom(xlim = c(min(res[["logFC"]], na.rm = TRUE) - 0.05,0))
       volc_facet <- volc_facet + theme(panel.spacing.y = unit(0.1, "cm"))
       volc_facet
@@ -3408,6 +3690,7 @@ server <- function(input, output) {
             plot.subtitle = element_text(hjust = 0.5),
             axis.text.x = element_text(angle = 45, hjust = 1),
             legend.position = "none")
+
 
     # --- COMBINE PLOTS AND RETURN ---
     combined_row <- cowplot::plot_grid(h, p, d, ncol = 3, rel_widths = c(1, 5, 1.2))

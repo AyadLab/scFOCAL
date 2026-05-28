@@ -9,7 +9,7 @@ Description: scFOCAL integrates small molecules transcriptional consensus signat
 License: Custom
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.3.2
+RoxygenNote: 7.3.3
 Depends: 
     R (>= 3.5)
 Imports:
@@ -29,6 +29,7 @@ Imports:
     grid,
     htmlwidgets,
     lme4,
+    limma,
     pheatmap,
     plotly,
     reshape2,
@@ -41,3 +42,5 @@ Imports:
     viridis,
     ggpubr,
     ComplexHeatmap
+Suggests: 
+    shinytest2

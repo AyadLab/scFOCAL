@@ -22,22 +22,24 @@ library(scales)
 library(ggforce)
 library(EnhancedVolcano)
 library(DT)
+library(scFOCAL)
 
-options(shiny.maxRequestSize = 30000*1024^2) # increase limit to 15gb?
+ options(shiny.maxRequestSize = 30000*1024^2) # increase limit to 15gb?
+
 
 ################################################################################
 #
 ################################################################################
 
-# # LINCS Response Signature Data
-# LINCS.ResponseSigs <- read.delim(
-#   file = "matPH3_2_1_0.2_0.3_L1000_Batch2017_Regina_removed.txt", header = T)
-# row.names(LINCS.ResponseSigs) <- LINCS.ResponseSigs$Genes
-# LINCS.ResponseSigs <- na.omit(LINCS.ResponseSigs)
-# newNames <- gsub("-", ".", rownames(LINCS.ResponseSigs))
-# rownames(LINCS.ResponseSigs) <- newNames
-# L1000_genes <- colnames(LINCS.ResponseSigs)
-# L1000_compounds <- rownames(LINCS.ResponseSigs)
+ # # LINCS Response Signature Data
+ # LINCS.ResponseSigs <- read.delim(
+ #   file = "matPH3_2_1_0.2_0.3_L1000_Batch2017_Regina_removed.txt", header = T)
+ # row.names(LINCS.ResponseSigs) <- LINCS.ResponseSigs$Genes
+ # LINCS.ResponseSigs <- na.omit(LINCS.ResponseSigs)
+ # newNames <- gsub("-", ".", rownames(LINCS.ResponseSigs))
+ # rownames(LINCS.ResponseSigs) <- newNames
+ # L1000_genes <- colnames(LINCS.ResponseSigs)
+ # L1000_compounds <- rownames(LINCS.ResponseSigs)
 
 ui <- fluidPage(
   tags$script(src = "https://kit.fontawesome.com/070e476711.js"),
@@ -77,7 +79,7 @@ ui <- fluidPage(
                  tags$i(class="fa-sharp fa-solid fa-magnifying-glass-chart"),
                  tags$span("- Run scFOCAL - dev")
                ), #put contents for actual application here
-
+##### 1. FILE UPLOAD  ####################################################################################################################################
                tabsetPanel(
                  tabPanel(tags$div(
                    tags$i(class = "fa-sharp fa-solid fa-upload"),
@@ -106,7 +108,18 @@ ui <- fluidPage(
                  hr(),
                  p(em("Depending on file size, after the file upload above is complete, it will still take some additional time for the data to be loaded into the processing environment. Please be patient.")),
                  br(),
+
+                 conditionalPanel(condition = 'output.seuratLoaded',
+                                  selectInput(
+                                    inputId = "assayChoice",
+                                    label = "Select Assay",
+                                    choices = NULL
+                                  )
+
+                                  )
+
                  ),
+#### 2. PRE- PROCESSING ############################################################################################################################################################################################
                  tabPanel(tags$div(
                    tags$i(class = "fa-sharp fa-solid fa-gears"),
                    tags$span("2. Pre-processing"),
@@ -166,6 +179,7 @@ ui <- fluidPage(
                  )
 
                  ),
+#### 3. DISEASE SIGNATURE #####################################################################################################################
                  tabPanel(tags$div(
                    tags$i(class = "fa-solid fa-signature"),
                    tags$span("3. Disease Signatures"),
@@ -319,11 +333,13 @@ ui <- fluidPage(
                  )
 
                  ),
+##### 4. CELL DRUG CONNECTIVITY ###########################################################################################################################################################################
                  tabPanel(tags$div(
                    tags$i(class = "fa-sharp fa-solid fa-pills"),
                    tags$span("4. Cell-Drug Connectivity"),
                    tags$style(type = "text/css", "li a{color:#000000; font-samily: 'sans-serif', Arial Rounded MT Bold;}")
                  ),
+
 
                  conditionalPanel(condition = "output.seuratNotLoaded",
                                   wellPanel(
@@ -361,6 +377,19 @@ ui <- fluidPage(
                                                                                            conditionalPanel(condition = "output.uploadCorrelationMatrix",
                                                                                                             hr(),
                                                                                                             uiOutput("L1000_release_InSilico"),
+                                                                                                            #verbatimTextOutput("debugRelease"),
+                                                                                                            conditionalPanel(
+                                                                                                              condition = "input.L1000_Release == 'Custom Upload'",
+                                                                                                              fileInput(
+                                                                                                                inputId = "customL1000Upload",
+                                                                                                                label = "Upload custom drug signature matrix",
+                                                                                                                buttonLabel = "Browse...",
+                                                                                                                placeholder = "No file selected",
+                                                                                                                width = NULL,
+                                                                                                                multiple = F,
+                                                                                                                accept = c(".csv", ".CSV"))
+                                                                                                            ),
+
                                                                                                             actionButton(inputId = "CalculateRDS_L1000_Spearman_Mat", label = "Calculate single-cell compound discordance")
                                                                                            ),
                                                                                            checkboxInput(inputId = "uploadCorrelationMatrix", label = "Upload a previously calculated Cell-Drug Connectivity file."),
@@ -375,7 +404,7 @@ ui <- fluidPage(
                                                                                            )
                                                                                          ),
                                                                                          wellPanel(
-                                                                                           conditionalPanel(condition = "output.corrMatrixCalculated",
+                                                                                           conditionalPanel(condition = "output.corrMatrixCalculated && !input.uploadCorrelationMatrix",
                                                                                                             hr(), # this part needs fixing... should align with left side
                                                                                                             h4("Discordance calculations complete. Download to avoid recalculation"),
                                                                                                             downloadButton(outputId = "RDScorrMatDownload", label = "Download single-cell vs small molecule correlations")
@@ -388,6 +417,9 @@ ui <- fluidPage(
                                                                                            )
                                                                                          )
                                                                                        ),
+
+
+
                                                                                        h5("Step 1.2 (Optional): Calculate cell-drug connectivities for custom TCS input."),
                                                                                        # conditionalPanel(condition = "output.TCSuploaded",
                                                                                        checkboxInput(inputId = "customTCSasRef", label = "Utilize custom TCS signature?"),
@@ -449,13 +481,13 @@ ui <- fluidPage(
                                                                                                                          wellPanel(
                                                                                                                            splitLayout(
                                                                                                                              wellPanel(
-                                                                                                                               selectizeInput(inputId = "referenceCompound",
-                                                                                                                                              label = "Select reference compound",
-                                                                                                                                              choices = L1000_compounds,
-                                                                                                                                              selected = "alisertib",
-                                                                                                                                              multiple = F,
-                                                                                                                                              width = NULL,
-                                                                                                                                              size = NULL),
+                                                                                                                               # selectizeInput(inputId = "referenceCompound",
+                                                                                                                               #                label = "Select reference compound",
+                                                                                                                               #                choices = NULL,
+                                                                                                                               #                multiple = F,
+                                                                                                                               #                width = NULL,
+                                                                                                                               #                size = NULL),
+                                                                                                                               uiOutput("referenceCompound_ui"),
                                                                                                                                # wellPanel(
                                                                                                                                sliderInput(inputId = "sigMinCutoffRDS",
                                                                                                                                            label = "Set visualization cutoff minimum:",
@@ -472,7 +504,7 @@ ui <- fluidPage(
                                                                                                                            )
                                                                                                                          ),
                                                                                                                          # wellPanel(
-                                                                                                                           plotOutput(outputId = "scSynergySeq1RDS"),
+                                                                                                                         plotOutput(outputId = "scSynergySeq1RDS"),
                                                                                                                          # ),
                                                                                                                          hr(),
                                                                                                                          br(),
@@ -481,7 +513,7 @@ ui <- fluidPage(
                                                                                                                              textOutput("referenceCompound", ),
                                                                                                                              actionButton("perturbationButton", label = "Run Perturbation Analysis", icon = icon("redo"))
                                                                                                                            ),
-                                                                                                                           conditionalPanel(condition = "input.perturbationButton",
+                                                                                                                           conditionalPanel(condition = "output.perturbationSuccess == true",
                                                                                                                                             hr(),
                                                                                                                                             h4("Success! Please navigate to the results tab."),
                                                                                                                                             hr())
@@ -604,6 +636,18 @@ ui <- fluidPage(
                                                          conditionalPanel(condition = "output.uploadCorrelationMatrix",
                                                                           hr(),
                                                                           uiOutput("L1000_release_InSilico"),
+                                                                          #verbatimTextOutput("debugRelease"),
+                                                                          conditionalPanel(
+                                                                            condition = "input.L1000_Release == 'Custom Upload'",
+                                                                            fileInput(
+                                                                              inputId = "customL1000Upload",
+                                                                              label = "Upload custom drug signature matrix",
+                                                                              buttonLabel = "Browse...",
+                                                                              placeholder = "No file selected",
+                                                                              width = NULL,
+                                                                              multiple = F,
+                                                                              accept = c(".csv", ".CSV"))
+                                                                          ),
                                                                           actionButton(inputId = "CalculateRDS_L1000_Spearman_Mat", label = "Calculate single-cell compound discordance")
                                                          ),
                                                          checkboxInput(inputId = "uploadCorrelationMatrix", label = "Upload a previously calculated Cell-Drug Connectivity file"),
@@ -614,11 +658,12 @@ ui <- fluidPage(
                                                                                     placeholder = "No file selected",
                                                                                     width = NULL,
                                                                                     multiple = F,
-                                                                                    accept = c(".csv", ".CSV"))
+                                                                                    accept = c(".csv", ".CSV")),
+
                                                          )
                                                        ),
                                                        wellPanel(
-                                                         conditionalPanel(condition = "output.corrMatrixCalculated",
+                                                         conditionalPanel(condition = "output.corrMatrixCalculated && !input.uploadCorrelationMatrix",
                                                                           hr(), # this part needs fixing... should align with left side
                                                                           h4("Discordance calculations complete. Download to avoid recalculation"),
                                                                           downloadButton(outputId = "RDScorrMatDownload", label = "Download single-cell vs small molecule correlations")
@@ -838,6 +883,7 @@ ui <- fluidPage(
                                   ) ################################################################################################################################################################### < End of controls uploaded conditional Panel...
                  )
                  ),
+##### IN SILICO PERTUBATION ###############################################################################################################
                  tabPanel(tags$div(
                    tags$i(class = "fa-sharp fa-solid fa-magnifying-glass-chart"),
                    tags$span("5. In Silico Perturbation"), # NEED TO UPDATE CONDITIONS SO THAT RESULTS ARE ONLY PLOTTED UNDER L1000 or CUSTOM from radio buttons...
@@ -885,13 +931,14 @@ ui <- fluidPage(
                                                                                        wellPanel(
                                                                                          splitLayout(
                                                                                            wellPanel(
-                                                                                             selectizeInput(inputId = "referenceCompound",
-                                                                                                            label = "Select reference compound",
-                                                                                                            choices = L1000_compounds,
-                                                                                                            selected = "alisertib",
-                                                                                                            multiple = F,
-                                                                                                            width = NULL,
-                                                                                                            size = NULL),
+                                                                                             # selectizeInput(inputId = "referenceCompound",
+                                                                                             #                label = "Select reference compound",
+                                                                                             #                choices = NULL,
+                                                                                             #                selected = NULL,
+                                                                                             #                multiple = F,
+                                                                                             #                width = NULL,
+                                                                                             #                size = NULL),
+                                                                                             uiOutput("referenceCompound_ui"),
                                                                                              # wellPanel(
                                                                                              sliderInput(inputId = "sigMinCutoffRDS",
                                                                                                          label = "Set visualization cutoff minimum:",
@@ -923,7 +970,7 @@ ui <- fluidPage(
                                                                                              actionButton("perturbationButton", label = "Run Perturbation Analysis", icon = icon("redo"))
                                                                                            )
                                                                                          ),
-                                                                                         conditionalPanel(condition = "input.perturbationButton",
+                                                                                         conditionalPanel(condition ="output.perturbationSuccess == true",
                                                                                                           hr(),
                                                                                                           h4("Success! Please navigate to the results tab."),
                                                                                                           hr())
@@ -1021,12 +1068,12 @@ ui <- fluidPage(
                                                                                        ),
                                                                                        conditionalPanel(condition = "input.CalculateCustomTCSConnectivities == 0",
                                                                                                         "custom TCS connectivities not yet calculated, please return to the 'Cell-Drug Connectivity' Tab.")
-                                                                             )# ,
+                                                                      )# ,
 
 
 
 
-                                                                      )
+                                                     )
 
                                                      ),
                                                      tabPanel(tags$div(
@@ -1127,7 +1174,7 @@ ui <- fluidPage(
                                                                                  )
                                                                         )
                                                                       )
-                                                          ),
+                                                     ),
                                                      conditionalPanel(condition = "input.perturbationButton_customTCS",
                                                                       hr(),
                                                                       h4("Custom TCS Result"),
@@ -1175,7 +1222,7 @@ ui <- fluidPage(
                                                                                        # "What goes here?" # ,
                                                                                        # plotOutput("main_plot_userSet_customTCS", height = "100%")
                                                                                      )
-                                                                                    )
+                                                                                   )
                                                                                  ),
                                                                                  wellPanel(
                                                                                    # "Plot of normalized shift here",
@@ -1192,8 +1239,8 @@ ui <- fluidPage(
                                                                                      style = "height: 1000px;",
                                                                                      plotOutput("main_plot_customTCS", height = "100%")
                                                                                    )
-                                                                                   )
-                                                                                 ),
+                                                                                 )
+                                                                        ),
                                                                         tabPanel("Combination Scoring",
                                                                                  hr("Rank L1000 Small Molecules for combination with your reference drug using the scFOCAL combination index."),
                                                                                  splitLayout(
