@@ -44,9 +44,25 @@ server <- function(input, output) {
   #
   ################################################################################
   # handle upload of Seurat object
+  #rdsSeurat <- reactive({
+   # req(input$seurobjRDS)
+   # readRDS(input$seurobjRDS$datapath)
+ # })
+  # handle upload of Seurat object (Dynamically handles Local vs Server)
   rdsSeurat <- reactive({
-    req(input$seurobjRDS)
-    readRDS(input$seurobjRDS$datapath)
+    if (input$upload_source == "local") {
+      req(input$seurobjRDS)
+      readRDS(input$seurobjRDS$datapath)
+    } else {
+      req(!is.integer(input$file_server))
+      file_info <- parseFilePaths(volumes, input$file_server)
+      req(nrow(file_info) > 0)
+      
+      file_path <- as.character(file_info$datapath[1])
+      req(file.exists(file_path)) 
+      
+      readRDS(file_path)
+    }
   })
 
   ######
@@ -104,7 +120,15 @@ server <- function(input, output) {
   })
 
   outputOptions(output, 'seuratNotLoaded', suspendWhenHidden = FALSE)
-
+  # --- UPDATED: Dynamic check for whether a file has been loaded yet ---
+  output$seuratNotLoaded <- reactive({
+    if (input$upload_source == "local") {
+      return(is.null(input$seurobjRDS$datapath))
+    } else {
+      return(is.integer(input$file_server))
+    }
+  })
+  outputOptions(output, 'seuratNotLoaded', suspendWhenHidden = FALSE)
   # Custom TCS Upload
   ##############################################################################
   # handle upload of Seurat object
