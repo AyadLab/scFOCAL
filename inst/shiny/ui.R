@@ -89,25 +89,50 @@ ui <- fluidPage(
                  hr(),
                  br(),
                  br(),
+                 #splitLayout(
+                 #  fileInput(inputId = "seurobjRDS",
+                 #            label = NULL,
+                  #           buttonLabel = "Browse...",
+                  #           placeholder = "No file selected",
+                  #         width = NULL,
+                   #          multiple = F,
+                  #         accept = c(".RDS", ".Rds", ".rds")),
+                  # conditionalPanel(condition = 'output.seuratLoaded',
+                  #                  h4("Success! Seurat object loaded."),
+                  #                  conditionalPanel(condition = 'output.seurat_obj_v5',
+                   #                                  h4("Version 5 Seurat Object Detected")))
+                # ),
+                # br(),
+                # hr(),
+                # p(em("Depending on file size, after the file upload above is complete, it will still take some additional time for the data to be loaded into the processing environment. Please be patient.")),
+                # br(),
+                # ),
+                
+                # --- NEW UPLOAD SOURCE SELECTOR ---
+                 radioButtons("upload_source", "Select Data Source:",
+                              choices = c("Upload from Computer" = "local",
+                                          "Browse Server Files (Latch/Linux)" = "server")),
+                 
                  splitLayout(
-                   fileInput(inputId = "seurobjRDS",
-                             label = NULL,
-                             buttonLabel = "Browse...",
-                             placeholder = "No file selected",
-                             width = NULL,
-                             multiple = F,
-                             accept = c(".RDS", ".Rds", ".rds")),
-                   conditionalPanel(condition = 'output.seuratLoaded',
-                                    h4("Success! Seurat object loaded."),
-                                    conditionalPanel(condition = 'output.seurat_obj_v5',
-                                                     h4("Version 5 Seurat Object Detected")))
-                 ),
-                 br(),
-                 hr(),
-                 p(em("Depending on file size, after the file upload above is complete, it will still take some additional time for the data to be loaded into the processing environment. Please be patient.")),
-                 br(),
-                 ),
-                 tabPanel(tags$div(
+                   # Local Upload
+                   conditionalPanel(
+                     condition = "input.upload_source == 'local'",
+                     fileInput(inputId = "seurobjRDS",
+                               label = NULL,
+                               buttonLabel = "Browse...",
+                               placeholder = "No file selected",
+                               width = NULL,
+                               multiple = F,
+                               accept = c(".RDS", ".Rds", ".rds"))
+                   ),
+                   
+                   # Server Upload
+                   conditionalPanel(
+                     condition = "input.upload_source == 'server'",
+                     shinyFilesButton("file_server", "Browse Server Files", "Please select an RDS file", multiple = FALSE),
+                     tags$div(tags$b("Selected file:"), textOutput("selected_server_file"), style = "margin-bottom: 15px; margin-top: 5px;")
+                   ),
+                   tabPanel(tags$div(
                    tags$i(class = "fa-sharp fa-solid fa-gears"),
                    tags$span("2. Pre-processing"),
                    tags$style(type = "text/css", "li a{color:#000000; font-samily: 'sans-serif', Arial Rounded MT Bold;}")
@@ -123,6 +148,12 @@ ui <- fluidPage(
                                     br(),
                                     p(em("Due to the size of some datasets, please allow a few minutes after upload completes for the file to be loaded into the working environment"))
                                   )
+                 ),
+                   # Success Messages
+                   conditionalPanel(condition = 'output.seuratLoaded',
+                                    h4("Success! Seurat object loaded.", style = "color: green;"),
+                                    conditionalPanel(condition = 'output.seurat_obj_v5',
+                                                     h4("Version 5 Seurat Object Detected")))
                  ),
 
                  conditionalPanel(condition = "output.seuratLoaded",
