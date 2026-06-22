@@ -1,4 +1,5 @@
 library(shiny)
+library(shinyFiles) # <--- ADD THIS LINE HERE
 library(Seurat)
 library(ggplot2)
 library(tibble)
@@ -29,8 +30,7 @@ library(stringr)
 library(viridis)
 library(ComplexHeatmap)
 
-server <- function(input, output) {
-
+server <- function(input, output, session) {
   # L1000 data as reactive
   L1000_genes <- reactive({
     colnames(get0("LINCS.ResponseSigs", envir = asNamespace("scFOCAL")))
@@ -49,13 +49,32 @@ server <- function(input, output) {
    # readRDS(input$seurobjRDS$datapath)
  # })
   # handle upload of Seurat object (Dynamically handles Local vs Server)
+  #  Define the volumes and initialize the button OUTSIDE the reactive block.
+  # Put this directly inside your main server <- function(input, output, session) { ... }
+  server_volumes <- c(Home = "~", Root = "/") 
+  
+  shinyFileChoose(input, "file_server", 
+                  roots = server_volumes, 
+                  session = session, 
+                  filetypes = c('rds', 'RDS', 'Rds'))
+  
+  
+  #  Now define  reactive block for loading the data
   rdsSeurat <- reactive({
     if (input$upload_source == "local") {
+      
+      # Handle Local Upload
       req(input$seurobjRDS)
       readRDS(input$seurobjRDS$datapath)
+      
     } else {
-      req(!is.integer(input$file_server))
-      file_info <- parseFilePaths(volumes, input$file_server)
+      
+      # Handle Server Upload
+      req(input$file_server)
+      req(!is.integer(input$file_server)) # Stop here if the user hasn't selected a file yet
+      
+      # Make sure to use 'server_volumes' here!
+      file_info <- parseFilePaths(server_volumes, input$file_server)
       req(nrow(file_info) > 0)
       
       file_path <- as.character(file_info$datapath[1])
@@ -64,7 +83,6 @@ server <- function(input, output) {
       readRDS(file_path)
     }
   })
-
   ######
   # SeuratObject Version Detection
   seurat_obj_version <- reactive({
