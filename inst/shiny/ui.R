@@ -96,30 +96,83 @@ ui <- fluidPage(
                  hr(),
                  br(),
                  br(),
-                 radioButtons("upload_source", "Select Data Source:",
-                              choices = c("Upload from Computer" = "local",
-                                          "Browse Server Files" = "server")),
+                 # radioButtons("upload_source", "Select Data Source:",
+                 #              choices = c("Upload from Computer" = "local",
+                 #                          "Browse Server Files" = "server")),
+                 # # splitLayout(
+                 #   # Local Upload
+                 #   conditionalPanel(
+                 #     condition = "input.upload_source == 'local'",
+                 #     fileInput(inputId = "seurobjRDS",
+                 #               label = NULL,
+                 #               buttonLabel = "Browse...",
+                 #               placeholder = "No file selected",
+                 #               width = NULL,
+                 #               multiple = F,
+                 #               accept = c(".RDS", ".Rds", ".rds"))
+                 #   ),
+                 #   # Server Upload
+                 #   conditionalPanel(
+                 #     condition = "input.upload_source == 'server'",
+                 #     shinyFilesButton("file_server", "Browse Server Files", "Please select an RDS file", multiple = FALSE),
+                 #     tags$div(tags$b("Selected file:"), textOutput("selected_server_file"), style = "margin-bottom: 15px; margin-top: 5px;")
+                 #   )
+                 # ) 
+                 # ), # <-- FIXED: Closed 1. Data Upload Tab
                  splitLayout(
-                   # Local Upload
-                   conditionalPanel(
-                     condition = "input.upload_source == 'local'",
-                     fileInput(inputId = "seurobjRDS",
-                               label = NULL,
-                               buttonLabel = "Browse...",
-                               placeholder = "No file selected",
-                               width = NULL,
-                               multiple = F,
-                               accept = c(".RDS", ".Rds", ".rds"))
-                   ),
-                   # Server Upload
-                   conditionalPanel(
-                     condition = "input.upload_source == 'server'",
-                     shinyFilesButton("file_server", "Browse Server Files", "Please select an RDS file", multiple = FALSE),
-                     tags$div(tags$b("Selected file:"), textOutput("selected_server_file"), style = "margin-bottom: 15px; margin-top: 5px;")
+                   cellWidths = c("40%", "60%"),
+                   
+                   # LEFT SIDE: Source Selector
+                   radioButtons(inputId = "upload_source", 
+                                label = "Select Data Source:",
+                                choices = c("Upload from Computer" = "local",
+                                            "Browse Server Files" = "server")),
+                   
+                   # RIGHT SIDE: Dynamic Browse Buttons & Success Messages
+                   tags$div(
+                     
+                     # --- LOCAL UPLOAD UI ---
+                     conditionalPanel(
+                       condition = "input.upload_source == 'local'",
+                       fileInput(inputId = "seurobjRDS",
+                                 label = "Choose Local File:",
+                                 buttonLabel = "Browse...",
+                                 placeholder = "No file selected",
+                                 width = "100%",
+                                 multiple = FALSE,
+                                 accept = c(".RDS", ".Rds", ".rds")),
+                       
+                       # Local Success Message (Shows only when file input is not null)
+                       conditionalPanel(
+                         condition = "input.seurobjRDS != null",
+                         tags$h5(icon("check-circle"), " File successfully uploaded!", style = "color: #28a745; font-weight: bold;")
+                       )
+                     ),
+                     
+                     # --- SERVER UPLOAD UI ---
+                     conditionalPanel(
+                       condition = "input.upload_source == 'server'",
+                       tags$label("Choose Server File:"),
+                       tags$br(),
+                       
+                       # We style this button to visually match the local "Browse..." button
+                       shinyFilesButton(id = "file_server", 
+                                        label = "Browse...", 
+                                        title = "Please select an RDS file", 
+                                        multiple = FALSE, 
+                                        icon = icon("folder-open")),
+                       tags$br(), tags$br(),
+                       
+                       # Server Success Message (shinyFiles button changes from an integer to an object when a file is picked)
+                       conditionalPanel(
+                         condition = "typeof input.file_server === 'object' && input.file_server !== null",
+                         tags$h5(icon("check-circle"), " File successfully selected:", style = "color: #28a745; font-weight: bold;"),
+                         tags$div(textOutput("selected_server_file"), style = "color: #28a745; margin-top: 5px;")
+                       )
+                     )
                    )
-                 ) 
-                 ), # <-- FIXED: Closed 1. Data Upload Tab
-                 
+                 )
+                 ),
                  # --- 2. PRE-PROCESSING ---
                  tabPanel(tags$div(
                    tags$i(class = "fa-sharp fa-solid fa-gears"),
