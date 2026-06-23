@@ -169,6 +169,7 @@ scFOCAL requires the following additional R packages:
 
 ```{r}
 library(shiny)
+library(shinyFiles)
 library(Seurat)
 library(ggplot2)
 library(tibble)
